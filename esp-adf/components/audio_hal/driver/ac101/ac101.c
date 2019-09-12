@@ -8,7 +8,7 @@
 #include <esp_system.h>
 
 #include "audio_hal.h"
-#include "../board/ai_audio_v1_0_board.h"
+#include "board.h"
 #include "ac101.h"
 
 #define AC101_TAG  "AC101"
@@ -20,65 +20,63 @@
         return b;\
     }
 
-const i2c_config_t es_i2c_cfg = {
+static i2c_config_t es_i2c_cfg = {
     .mode = I2C_MODE_MASTER,
-    .sda_io_num = IIC_DATA,
-    .scl_io_num = IIC_CLK,
     .sda_pullup_en = GPIO_PULLUP_ENABLE,
     .scl_pullup_en = GPIO_PULLUP_ENABLE,
     .master.clk_speed = 100000
 };
 
-static int i2c_init()
+
+static int AC101_Write_Reg(uint8_t reg_addr, uint16_t data)
 {
-    int res;
-    res = i2c_param_config(IIC_PORT, &es_i2c_cfg);
-    res |= i2c_driver_install(IIC_PORT, es_i2c_cfg.mode, 0, 0, 0);
-    AC_ASSERT(res, "i2c_init error", -1);
+    int res = 0;
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    res |= i2c_master_start(cmd);
+    res |= i2c_master_write_byte(cmd, AC101_ADDR, 1 /*ACK_CHECK_EN*/);
+    res |= i2c_master_write_byte(cmd, reg_addr, 1 /*ACK_CHECK_EN*/);
+    res |= i2c_master_write_byte(cmd, data, 1 /*ACK_CHECK_EN*/);
+    res |= i2c_master_stop(cmd);
+    res |= i2c_master_cmd_begin(0, cmd, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
+    AC_ASSERT(res, "AC101 Write Reg error", -1);
     return res;
 }
 
-static esp_err_t i2c_example_master_read_slave(uint8_t DevAddr, uint8_t reg,uint8_t* data_rd, size_t size)
+
+static uint16_t AC101_read_Reg(uint8_t reg_addr)
 {
-    if (size == 0) {
-        return ESP_OK;
-    }
+    uint8_t data;
+    int res = 0;
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, ( DevAddr << 1 ) | WRITE_BIT, ACK_CHECK_EN);
-    i2c_master_write_byte(cmd, reg, ACK_CHECK_EN);
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, ( DevAddr << 1 ) | READ_BIT, ACK_CHECK_EN);		//check or not
-    i2c_master_read(cmd, data_rd, size, ACK_VAL);
-    i2c_master_stop(cmd);
-    esp_err_t ret = i2c_master_cmd_begin(IIC_PORT, cmd, 1000 / portTICK_RATE_MS);
+
+    res |= i2c_master_start(cmd);
+    res |= i2c_master_write_byte(cmd, AC101_ADDR, 1 /*ACK_CHECK_EN*/);
+    res |= i2c_master_write_byte(cmd, reg_addr, 1 /*ACK_CHECK_EN*/);
+    res |= i2c_master_stop(cmd);
+    res |= i2c_master_cmd_begin(0, cmd, 1000 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
-    return ret;
+
+    cmd = i2c_cmd_link_create();
+    res |= i2c_master_start(cmd);
+    res |= i2c_master_write_byte(cmd, AC101_ADDR | 0x01, 1 /*ACK_CHECK_EN*/);
+    res |= i2c_master_read_byte(cmd, &data, 0x01 /*NACK_VAL*/);
+    res |= i2c_master_stop(cmd);
+    res |= i2c_master_cmd_begin(0, cmd, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
+
+    AC_ASSERT(res, "AC101 Read Reg error", -1);
+    return (int)data;
 }
 
-static esp_err_t AC101_Write_Reg(uint8_t reg, uint16_t val)
+static int i2c_init()
 {
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    esp_err_t ret =0;
-	uint8_t send_buff[4];
-	send_buff[0] = (AC101_ADDR << 1);
-	send_buff[1] = reg;
-	send_buff[2] = (val>>8) & 0xff;
-	send_buff[3] = val & 0xff;
-    ret |= i2c_master_start(cmd);
-    ret |= i2c_master_write(cmd, send_buff, 4, ACK_CHECK_EN);
-    ret |= i2c_master_stop(cmd);
-    ret |= i2c_master_cmd_begin(IIC_PORT, cmd, 1000 / portTICK_RATE_MS);
-    i2c_cmd_link_delete(cmd);
-    return ret;
-}
-
-static uint16_t AC101_read_Reg(uint8_t reg) {
-	uint16_t val = 0;
-	uint8_t data_rd[2];
-	i2c_example_master_read_slave(AC101_ADDR,reg, data_rd, 2);
-	val=(data_rd[0]<<8)+data_rd[1];
-	return val;
+    int res = 0;
+    get_i2c_pins(I2C_NUM_0, &es_i2c_cfg);
+    res |= i2c_param_config(I2C_NUM_0, &es_i2c_cfg);
+    res |= i2c_driver_install(I2C_NUM_0, es_i2c_cfg.mode, 0, 0, 0);
+    AC_ASSERT(res, "i2c_init error", -1);
+    return res;
 }
 
 void set_codec_clk(audio_hal_iface_samples_t sampledata)
@@ -123,7 +121,9 @@ void set_codec_clk(audio_hal_iface_samples_t sampledata)
 }
 
 esp_err_t ac101_init(audio_hal_codec_config_t* codec_cfg) {
-	if(i2c_init()) return -1;
+	
+	if(i2c_init() < 0) return -1;
+	
 	esp_err_t res;
 	res = AC101_Write_Reg(CHIP_AUDIO_RS, 0x123);
 	vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -434,14 +434,14 @@ void ac101_pa_power(bool enable)
     memset(&io_conf, 0, sizeof(io_conf));
     io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
     io_conf.mode = GPIO_MODE_OUTPUT;
-    io_conf.pin_bit_mask = BIT(GPIO_PA_EN);
+    io_conf.pin_bit_mask = BIT(PA_ENABLE_GPIO);
     io_conf.pull_down_en = 0;
     io_conf.pull_up_en = 0;
     gpio_config(&io_conf);
     if (enable) {
-        gpio_set_level(GPIO_PA_EN, 1);
+        gpio_set_level(PA_ENABLE_GPIO, 1);
     } else {
-        gpio_set_level(GPIO_PA_EN, 0);
+        gpio_set_level(PA_ENABLE_GPIO, 0);
     }
 }
 
