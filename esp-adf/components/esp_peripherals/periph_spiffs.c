@@ -112,7 +112,7 @@ esp_err_t periph_spiffs_mount(esp_periph_handle_t periph)
         } else {
             ESP_LOGE(TAG, "Failed to initialize SPIFFS (%d)", ret);
         }
-        return NULL;
+        return ret;
     }
 
     if (ret == ESP_OK) {

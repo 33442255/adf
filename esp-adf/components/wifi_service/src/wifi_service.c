@@ -115,7 +115,7 @@ static void wifi_serv_state_send(void *que, int type, void *data, int len, int d
         xQueueSend(que, &evt, 0);
     }
 }
-
+/*
 static esp_err_t wifi_event_cb(void *ctx, system_event_t *event)
 {
     periph_service_handle_t serv_handle = (periph_service_handle_t)ctx;
@@ -170,7 +170,7 @@ static esp_err_t wifi_event_cb(void *ctx, system_event_t *event)
     }
     return ESP_OK;
 }
-
+*/
 esp_err_t configure_wifi_sta_mode(wifi_config_t *wifi_cfg)
 {
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
@@ -182,7 +182,7 @@ static void wifi_sta_setup(void *para)
 {
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-    ESP_ERROR_CHECK(esp_event_loop_init(wifi_event_cb, para));
+//    ESP_ERROR_CHECK(esp_event_loop_init(wifi_event_cb, para));
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_FLASH));
 }
 

@@ -87,8 +87,8 @@ static esp_err_t rsp_filter_open(audio_element_handle_t self)
         ESP_LOGI(TAG, "Currently, the complexity is %d, that is more than the maximal of complexity, it has been set the maximal of complexity.", resample_info->complexity);
         resample_info->complexity = COMPLEXITY_MAX_NUM;
     }
-    unsigned char p_in[1] = {NULL};
-    unsigned char p_out[1] = {NULL};
+    unsigned char p_in[1] = {};
+    unsigned char p_out[1] = {};
     filter->in_buf = p_in;
     filter->out_buf = p_out;
     resample_info->max_indata_bytes = RESAMPLING_POINT_NUM * 2 * resample_info->src_ch;
