@@ -2,7 +2,7 @@ set(COMPONENT_ADD_INCLUDEDIRS include)
 set(COMPONENT_PRIV_INCLUDEDIRS inc)
 
 # Edit following two lines to set component requirements (see docs)
-set(COMPONENT_REQUIRES )
+set(COMPONENT_REQUIRES bt)
 set(COMPONENT_PRIV_REQUIRES audio_sal esp_dispatcher)
 
 set(COMPONENT_SRCS src/esp_wifi_setting.c
@@ -14,5 +14,5 @@ set(COMPONENT_SRCS src/esp_wifi_setting.c
 
 register_component()
 
-target_link_libraries(${COMPONENT_NAME} INTERFACE "-L${CMAKE_CURRENT_LIST_DIR}/airkiss_config")
-target_link_libraries(${COMPONENT_NAME} INTERFACE airkiss_aes)
+target_link_libraries(${COMPONENT_LIB} INTERFACE "-L${CMAKE_CURRENT_LIST_DIR}/airkiss_config")
+target_link_libraries(${COMPONENT_LIB} INTERFACE airkiss_aes)

@@ -24,7 +24,7 @@ register_component()
 
 set(COMPONENT_PRIV_REQUIRES audio_pipeline audio_sal)
 
-target_link_libraries(${COMPONENT_NAME} "-L ${CMAKE_CURRENT_SOURCE_DIR}/esp_audio/lib"
+target_link_libraries(${COMPONENT_LIB} "-L ${CMAKE_CURRENT_SOURCE_DIR}/esp_audio/lib"
                                 "-L ${CMAKE_CURRENT_SOURCE_DIR}/esp_codec/lib"
                                 "-L ${CMAKE_CURRENT_SOURCE_DIR}/esp_dlna/lib"
                                 "-L ${CMAKE_CURRENT_SOURCE_DIR}/esp_sr/lib"
@@ -32,9 +32,9 @@ target_link_libraries(${COMPONENT_NAME} "-L ${CMAKE_CURRENT_SOURCE_DIR}/esp_audi
                                 "-L ${CMAKE_CURRENT_SOURCE_DIR}/esp_upnp/lib"
                                 "-L ${CMAKE_CURRENT_SOURCE_DIR}/esp_sip/lib"
                                 "-L ${CMAKE_CURRENT_SOURCE_DIR}/recorder_engine/lib")
-target_link_libraries(${COMPONENT_NAME}
+target_link_libraries(${COMPONENT_LIB}
                         esp_processing esp-aac esp-amr esp-amrwbenc esp-flac esp-ogg-container esp-opus esp-tremor
-                        esp_audio esp_dlna esp_ssdp esp_upnp esp_wakenet vad esp_sip
+                        esp_audio esp_dlna esp_ssdp esp_upnp esp_wakenet vad esp_sip esp-mp3
                         nn_model_alexa_wn3
                         nn_model_hilexin_wn3
                         nn_model_hilexin_wn5
