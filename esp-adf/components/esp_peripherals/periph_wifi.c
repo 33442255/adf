@@ -188,7 +188,7 @@ static void wifi_reconnect_timer(xTimerHandle tmr)
 
 /////////////////////////////////////////////////////////////////////////
 
-static esp_err_t event_handler(void* arg, esp_event_base_t event_base, 
+static void event_handler(void* arg, esp_event_base_t event_base, 
                                 int32_t event_id, void* ctx)
 {
 	//esp_periph_handle_t self = (esp_periph_handle_t)ctx;
@@ -228,7 +228,6 @@ static esp_err_t event_handler(void* arg, esp_event_base_t event_base,
         esp_wifi_get_config(WIFI_IF_STA, &w_config);
         strcpy(periph_wifi->ssid, (char *)w_config.sta.ssid);
     }
-	return ESP_OK;
 }
 
 /////////////////////////////////////////////////////////////////////////

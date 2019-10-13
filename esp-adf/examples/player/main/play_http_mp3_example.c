@@ -34,8 +34,6 @@
 
 static const char *TAG = "HTTP_MP3_EXAMPLE";
 
-static int adf_music_mp3_pos;
-
 void app_main(void)
 {
     esp_err_t err = nvs_flash_init();
@@ -59,6 +57,9 @@ void app_main(void)
 
     int player_volume;
     audio_hal_get_volume(board_handle->audio_hal, &player_volume);
+	
+	player_volume = 10;
+	audio_hal_set_volume(board_handle->audio_hal, player_volume);
 
     ESP_LOGI(TAG, "[2.0] Create audio pipeline for playback");
     audio_pipeline_cfg_t pipeline_cfg = DEFAULT_AUDIO_PIPELINE_CONFIG();
@@ -106,8 +107,8 @@ void app_main(void)
 
     periph_wifi_wait_for_connected(wifi_handle, portMAX_DELAY);
   
-    ESP_LOGI(TAG, "[3.1] Initialize keys on board");
-    audio_board_key_init(set);
+//    ESP_LOGI(TAG, "[3.1] Initialize keys on board");
+//    audio_board_key_init(set);
 
     ESP_LOGI(TAG, "[ 4 ] Set up  event listener");
     audio_event_iface_cfg_t evt_cfg = AUDIO_EVENT_IFACE_DEFAULT_CFG();
@@ -148,7 +149,7 @@ void app_main(void)
             continue;
         }
 
-		if ((msg.source_type == PERIPH_ID_TOUCH || msg.source_type == PERIPH_ID_BUTTON || msg.source_type == PERIPH_ID_ADC_BTN)
+/*		if ((msg.source_type == PERIPH_ID_TOUCH || msg.source_type == PERIPH_ID_BUTTON || msg.source_type == PERIPH_ID_ADC_BTN)
         && (msg.cmd == PERIPH_TOUCH_TAP || msg.cmd == PERIPH_BUTTON_PRESSED || msg.cmd == PERIPH_ADC_BUTTON_PRESSED)) {
 
             if ((int) msg.data == get_input_play_id()) {
@@ -170,7 +171,6 @@ void app_main(void)
                     case AEL_STATE_FINISHED :
                         ESP_LOGI(TAG, "[ * ] Rewinding audio pipeline");
                         audio_pipeline_stop(pipeline);
-                        adf_music_mp3_pos = 0;
                         audio_pipeline_resume(pipeline);
                         break;
                     default :
@@ -200,6 +200,7 @@ void app_main(void)
             continue;
 			}
 
+*/
 		/* Stop when the last pipeline element (i2s_stream_writer in this case) receives stop event */
         if (msg.source_type == AUDIO_ELEMENT_TYPE_ELEMENT && msg.source == (void *) i2s_stream_writer
             && msg.cmd == AEL_MSG_CMD_REPORT_STATUS
