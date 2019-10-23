@@ -810,6 +810,7 @@ void clientReceiveCallback(int sockfd, char *pdata, int len)
 			}	
 			break;
 		}
+		/* fall through */
 		//no break here
 	case C_HEADER1:  // not ended
 		{

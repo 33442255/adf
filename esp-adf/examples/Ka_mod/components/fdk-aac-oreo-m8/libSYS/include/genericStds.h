@@ -399,10 +399,12 @@ inline
 #else
 static
 #endif
+
 int IS_LITTLE_ENDIAN(void) {
   int __dummy = 1;
   return ( *( (UCHAR*)(&(__dummy) ) ) );
 }
+
 
 /*!
  *  Convert input value to little endian format.
