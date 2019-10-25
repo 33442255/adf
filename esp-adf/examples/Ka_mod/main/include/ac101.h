@@ -70,17 +70,17 @@
 #define DAC_DAP_ENA     	0xb5
 
 typedef enum{
-	SIMPLE_RATE_8000	= 0x0000,
-	SIMPLE_RATE_11052	= 0x1000,
-	SIMPLE_RATE_12000	= 0x2000,
-	SIMPLE_RATE_16000	= 0x3000,
-	SIMPLE_RATE_22050	= 0x4000,
-	SIMPLE_RATE_24000	= 0x5000,
-	SIMPLE_RATE_32000	= 0x6000,
-	SIMPLE_RATE_44100	= 0x7000,
-	SIMPLE_RATE_48000	= 0x8000,
-	SIMPLE_RATE_96000	= 0x9000,
-	SIMPLE_RATE_192000	= 0xa000,
+	SAMPLE_RATE_8000	= 0x0000,
+	SAMPLE_RATE_11052	= 0x1000,
+	SAMPLE_RATE_12000	= 0x2000,
+	SAMPLE_RATE_16000	= 0x3000,
+	SAMPLE_RATE_22050	= 0x4000,
+	SAMPLE_RATE_24000	= 0x5000,
+	SAMPLE_RATE_32000	= 0x6000,
+	SAMPLE_RATE_44100	= 0x7000,
+	SAMPLE_RATE_48000	= 0x8000,
+	SAMPLE_RATE_96000	= 0x9000,
+	SAMPLE_RATE_192000	= 0xa000,
 }ac_adda_fs_i2s1_t;
 
 typedef enum{
@@ -149,6 +149,7 @@ typedef enum {
     GAIN_60DB  = 7,
 } ac_output_mixer_gain_t;
 
+
 /**
  * @brief Configure AC101 clock
  */
@@ -156,6 +157,64 @@ typedef struct {
 	ac_i2s1_bclk_div_t bclk_div;    /*!< bits clock divide */
 	ac_i2s1_lrck_div_t lclk_div;    /*!< WS clock divide */
 } ac_i2s_clock_t;
+
+
+/**
+ * @brief Audio board handle
+ */
+struct audio_board_handle {
+    audio_hal_handle_t audio_hal; /*!< audio hardware abstract layer handle */
+ };
+
+typedef struct audio_board_handle *audio_board_handle_t;
+
+/**
+ * @brief Initialize audio board
+ *
+ * @return The audio board handle
+ */
+audio_board_handle_t a101_board_init(void);
+
+/**
+ * @brief Initialize codec chip
+ *
+ * @return The audio hal handle
+ */
+audio_hal_handle_t a101_codec_init(void);
+
+
+/**
+ * @brief Query audio_board_handle
+ *
+ * @return The audio board handle
+ */
+audio_board_handle_t a101_board_get_handle(void);
+
+/**
+ * @brief Uninitialize the audio board
+ *
+ * @param audio_board The handle of audio board
+ *
+ * @return  0       success,
+ *          others  fail
+ */
+esp_err_t a101_board_deinit(audio_board_handle_t audio_board);
+
+
+
+extern audio_hal_func_t AUDIO_CODEC_AC101_CODEC_HANDLE;
+
+#define AUDIO_CODEC_DEFAULT_CONFIG(){                   \
+        .adc_input  = AUDIO_HAL_ADC_INPUT_ALL,          \
+        .dac_output = AUDIO_HAL_DAC_OUTPUT_ALL,         \
+        .codec_mode = AUDIO_HAL_CODEC_MODE_DECODE,      \
+        .i2s_iface = {                                  \
+            .mode = AUDIO_HAL_MODE_SLAVE,               \
+            .fmt = AUDIO_HAL_I2S_NORMAL,                \
+            .samples = AUDIO_HAL_44K_SAMPLES,           \
+            .bits = AUDIO_HAL_BIT_LENGTH_16BITS,        \
+        },                                              \
+};
 
 
 esp_err_t ac101_init(audio_hal_codec_config_t* codec_cfg);

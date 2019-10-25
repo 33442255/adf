@@ -33,7 +33,15 @@
 extern "C" {
 #endif
 
-#define AUDIO_HAL_VOL_DEFAULT 70
+#define AUDIO_HAL_VOL_DEFAULT 30
+
+#define mutex_lock(x)       while (xSemaphoreTake(x, portMAX_DELAY) != pdPASS);
+#define mutex_unlock(x)     xSemaphoreGive(x)
+#define mutex_create()      xSemaphoreCreateMutex()
+#define mutex_destroy(x)    vSemaphoreDelete(x)
+
+void *audio_calloc(size_t nmemb, size_t size);
+
 
 typedef struct audio_hal *audio_hal_handle_t;
 

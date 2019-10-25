@@ -22,6 +22,8 @@
 
 #include "audio_player.h"
 #include "audio_renderer.h"
+#include "ac101.h"
+#include "audio_hal.h"
 
 #define TAG "renderer"
 
@@ -29,10 +31,11 @@
 static renderer_config_t *renderer_instance = NULL;
 static component_status_t renderer_status = UNINITIALIZED;
 //static QueueHandle_t i2s_event_queue;
+static audio_board_handle_t a101_handle = 0;
 
 static void init_i2s(renderer_config_t *config)
 {
-    i2s_mode_t mode = I2S_MODE_MASTER | I2S_MODE_TX;
+	i2s_mode_t mode = I2S_MODE_MASTER | I2S_MODE_TX;
     i2s_comm_format_t comm_fmt = I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB;
 	int use_apll = 0;
 	esp_chip_info_t out_info;
@@ -61,7 +64,20 @@ static void init_i2s(renderer_config_t *config)
 		} else
 			ESP_LOGI(TAG, "chip revision %d, cannot enable APLL", out_info.revision);
 	}
-    /*
+	if (config->output_mode == I2S)
+	{
+		ESP_LOGI(TAG, "Start a101 codec chip");
+		a101_handle = a101_board_init();
+  	    audio_hal_ctrl_codec(a101_handle->audio_hal, AUDIO_HAL_CODEC_MODE_DECODE, AUDIO_HAL_CTRL_START);
+
+  	    int player_volume;
+  	    audio_hal_get_volume(a101_handle->audio_hal, &player_volume);
+
+  	    ESP_LOGI(TAG, "ac101 value: %d",player_volume );
+
+	}
+
+	/*
      * Allocate just enough to decode AAC+, which has huge frame sizes.
      *
      * Memory consumption formula:
@@ -126,6 +142,9 @@ static void init_i2s(renderer_config_t *config)
 //KaraDio32
 void renderer_volume(uint32_t vol)
 {
+		audio_hal_set_volume(a101_handle->audio_hal, vol);
+		vol = 254;
+
 	// log volume (magic)
 	if (vol == 1) return;  // volume 0
 //	ESP_LOGI(TAG, "Renderer vol: %d %X",vol,vol );

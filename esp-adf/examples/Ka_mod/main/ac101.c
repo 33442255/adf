@@ -16,6 +16,60 @@
 #define IIC_PORT	I2C_NUM_1
 
 
+static audio_board_handle_t board_handle = 0;
+
+audio_board_handle_t a101_board_init(void)
+{
+    if (board_handle) {
+        ESP_LOGW(AC101_TAG, "The board has already been initialized!");
+        return board_handle;
+    }
+    board_handle = (audio_board_handle_t) audio_calloc(1, sizeof(struct audio_board_handle));
+    AUDIO_MEM_CHECK(AC101_TAG, board_handle, return NULL);
+    board_handle->audio_hal = a101_codec_init();
+    return board_handle;
+}
+
+
+audio_hal_handle_t a101_codec_init(void)
+{
+    audio_hal_codec_config_t audio_codec_cfg = AUDIO_CODEC_DEFAULT_CONFIG();
+    audio_hal_handle_t codec_hal = audio_hal_init(&audio_codec_cfg, &AUDIO_CODEC_AC101_CODEC_HANDLE);
+    AUDIO_NULL_CHECK(AC101_TAG, codec_hal, return NULL);
+    return codec_hal;
+}
+
+audio_board_handle_t a101_board_get_handle(void)
+{
+    return board_handle;
+}
+
+
+esp_err_t a101_board_deinit(audio_board_handle_t audio_board)
+{
+    esp_err_t ret = ESP_OK;
+    ret |= audio_hal_deinit(audio_board->audio_hal);
+    free(audio_board);
+    board_handle = NULL;
+    return ret;
+}
+
+
+
+/*
+ * operate function of codec
+ */
+audio_hal_func_t AUDIO_CODEC_AC101_CODEC_HANDLE = {
+    .audio_codec_initialize = ac101_init,
+    .audio_codec_deinitialize = ac101_deinit,
+    .audio_codec_ctrl = ac101_ctrl_state,
+    .audio_codec_config_iface = ac101_config_i2s,
+    .audio_codec_set_volume = ac101_set_voice_volume,
+    .audio_codec_get_volume = ac101_get_voice_volume,
+};
+
+
+
 #define AC_ASSERT(a, format, b, ...) \
     if ((a) != 0) { \
         ESP_LOGE(AC101_TAG, format, ##__VA_ARGS__); \
@@ -30,46 +84,53 @@ static i2c_config_t es_i2c_cfg = {
 };
 
 
-static int AC101_Write_Reg(uint8_t reg_addr, uint16_t data)
+static esp_err_t AC101_Write_Reg(uint8_t reg_addr, uint16_t data)
 {
-    int res = 0;
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    res |= i2c_master_start(cmd);
-    res |= i2c_master_write_byte(cmd, AC101_ADDR, 1 /*ACK_CHECK_EN*/);
-    res |= i2c_master_write_byte(cmd, reg_addr, 1 /*ACK_CHECK_EN*/);
-    res |= i2c_master_write_byte(cmd, data, 1 /*ACK_CHECK_EN*/);
-    res |= i2c_master_stop(cmd);
-    res |= i2c_master_cmd_begin(0, cmd, 1000 / portTICK_RATE_MS);
+    esp_err_t ret = 0;
+	uint8_t send_buff[4];
+	send_buff[0] = (AC101_ADDR << 1);
+	send_buff[1] = reg_addr;
+	send_buff[2] = (data>>8) & 0xff;
+	send_buff[3] = data & 0xff;
+    ret |= i2c_master_start(cmd);
+    ret |= i2c_master_write(cmd, send_buff, 4, ACK_CHECK_EN);
+    ret |= i2c_master_stop(cmd);
+    ret |= i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
-    AC_ASSERT(res, "AC101 Write Reg error", -1);
-    return res;
+    return ret;
 }
+
+
+static esp_err_t i2c_example_master_read_slave(uint8_t DevAddr, uint8_t reg,uint8_t* data_rd, size_t size)
+{
+    if (size == 0) {
+        return ESP_OK;
+    }
+    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, ( DevAddr << 1 ) | WRITE_BIT, ACK_CHECK_EN);
+    i2c_master_write_byte(cmd, reg, ACK_CHECK_EN);
+    i2c_master_start(cmd);
+    i2c_master_write_byte(cmd, ( DevAddr << 1 ) | READ_BIT, ACK_CHECK_EN);		//check or not
+    i2c_master_read(cmd, data_rd, size, ACK_VAL);
+    i2c_master_stop(cmd);
+    esp_err_t ret = i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd);
+    return ret;
+}
+
 
 
 static uint16_t AC101_read_Reg(uint8_t reg_addr)
 {
-    uint8_t data;
-    int res = 0;
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-
-    res |= i2c_master_start(cmd);
-    res |= i2c_master_write_byte(cmd, AC101_ADDR, 1 /*ACK_CHECK_EN*/);
-    res |= i2c_master_write_byte(cmd, reg_addr, 1 /*ACK_CHECK_EN*/);
-    res |= i2c_master_stop(cmd);
-    res |= i2c_master_cmd_begin(0, cmd, 1000 / portTICK_RATE_MS);
-    i2c_cmd_link_delete(cmd);
-
-    cmd = i2c_cmd_link_create();
-    res |= i2c_master_start(cmd);
-    res |= i2c_master_write_byte(cmd, AC101_ADDR | 0x01, 1 /*ACK_CHECK_EN*/);
-    res |= i2c_master_read_byte(cmd, &data, 0x01 /*NACK_VAL*/);
-    res |= i2c_master_stop(cmd);
-    res |= i2c_master_cmd_begin(0, cmd, 1000 / portTICK_RATE_MS);
-    i2c_cmd_link_delete(cmd);
-
-    AC_ASSERT(res, "AC101 Read Reg error", -1);
-    return (int)data;
+	uint16_t val = 0;
+	uint8_t data_rd[2];
+	i2c_example_master_read_slave(AC101_ADDR,reg_addr, data_rd, 2);
+	val=(data_rd[0]<<8)+data_rd[1];
+	return val;
 }
+
 
 static int i2c_init()
 {
@@ -87,37 +148,37 @@ void set_codec_clk(audio_hal_iface_samples_t sampledata)
 	switch(sampledata)
 	{
 	case AUDIO_HAL_08K_SAMPLES:
-		sample = SIMPLE_RATE_8000;
+		sample = SAMPLE_RATE_8000;
 		break;
 	case AUDIO_HAL_11K_SAMPLES:
-		sample = SIMPLE_RATE_11052;
+		sample = SAMPLE_RATE_11052;
 		break;
 	case AUDIO_HAL_16K_SAMPLES:
-		sample = SIMPLE_RATE_16000;
+		sample = SAMPLE_RATE_16000;
 		break;
 	case AUDIO_HAL_22K_SAMPLES:
-		sample = SIMPLE_RATE_22050;
+		sample = SAMPLE_RATE_22050;
 		break;
 	case AUDIO_HAL_24K_SAMPLES:
-		sample = SIMPLE_RATE_24000;
+		sample = SAMPLE_RATE_24000;
 		break;
 	case AUDIO_HAL_32K_SAMPLES:
-		sample = SIMPLE_RATE_32000;
+		sample = SAMPLE_RATE_32000;
 		break;
 	case AUDIO_HAL_44K_SAMPLES:
-		sample = SIMPLE_RATE_44100;
+		sample = SAMPLE_RATE_44100;
 		break;
 	case AUDIO_HAL_48K_SAMPLES:
-		sample = SIMPLE_RATE_48000;
+		sample = SAMPLE_RATE_48000;
 		break;
 	case AUDIO_HAL_96K_SAMPLES:
-		sample = SIMPLE_RATE_96000;
+		sample = SAMPLE_RATE_96000;
 		break;
 	case AUDIO_HAL_192K_SAMPLES:
-		sample = SIMPLE_RATE_192000;
+		sample = SAMPLE_RATE_192000;
 		break;
 	default:
-		sample = SIMPLE_RATE_44100;
+		sample = SAMPLE_RATE_44100;
 	}
 	AC101_Write_Reg(I2S_SR_CTRL, sample);
 }
@@ -362,37 +423,37 @@ esp_err_t ac101_config_i2s(audio_hal_codec_mode_t mode, audio_hal_codec_i2s_ifac
 	switch(iface->samples)
 	{
 	case AUDIO_HAL_08K_SAMPLES:
-		sample = SIMPLE_RATE_8000;
+		sample = SAMPLE_RATE_8000;
 		break;
 	case AUDIO_HAL_11K_SAMPLES:
-		sample = SIMPLE_RATE_11052;
+		sample = SAMPLE_RATE_11052;
 		break;
 	case AUDIO_HAL_16K_SAMPLES:
-		sample = SIMPLE_RATE_16000;
+		sample = SAMPLE_RATE_16000;
 		break;
 	case AUDIO_HAL_22K_SAMPLES:
-		sample = SIMPLE_RATE_22050;
+		sample = SAMPLE_RATE_22050;
 		break;
 	case AUDIO_HAL_24K_SAMPLES:
-		sample = SIMPLE_RATE_24000;
+		sample = SAMPLE_RATE_24000;
 		break;
 	case AUDIO_HAL_32K_SAMPLES:
-		sample = SIMPLE_RATE_32000;
+		sample = SAMPLE_RATE_32000;
 		break;
 	case AUDIO_HAL_44K_SAMPLES:
-		sample = SIMPLE_RATE_44100;
+		sample = SAMPLE_RATE_44100;
 		break;
 	case AUDIO_HAL_48K_SAMPLES:
-		sample = SIMPLE_RATE_48000;
+		sample = SAMPLE_RATE_48000;
 		break;
 	case AUDIO_HAL_96K_SAMPLES:
-		sample = SIMPLE_RATE_96000;
+		sample = SAMPLE_RATE_96000;
 		break;
 	case AUDIO_HAL_192K_SAMPLES:
-		sample = SIMPLE_RATE_192000;
+		sample = SAMPLE_RATE_192000;
 		break;
 	default:
-		sample = SIMPLE_RATE_44100;
+		sample = SAMPLE_RATE_44100;
 	}
 	regval = AC101_read_Reg(I2S1LCK_CTRL);
 	regval &= 0xffc3;
