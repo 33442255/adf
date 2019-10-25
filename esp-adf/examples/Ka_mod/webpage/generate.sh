@@ -2,7 +2,7 @@
 # Need python3. Install it with pacman -Sy python3
 echo style
 cp style.css style.ori
-python3 ./css-html-js-minify.py style.css
+python ./css-html-js-minify.py style.css
 gzip  style.min.css 
 mv style.min.css.gz style.css
 xxd -i style.css > style
@@ -12,7 +12,7 @@ mv style.ori style.css
 
 echo style1
 cp style1.css style1.ori
-python3 ./css-html-js-minify.py style1.css
+python ./css-html-js-minify.py style1.css
 gzip  style1.min.css 
 mv style1.min.css.gz style1.css
 xxd -i style1.css > style1
@@ -32,7 +32,7 @@ mv script.ori script.js
 
 echo index
 cp index.html index.htm
-python3 ./css-html-js-minify.py index.htm
+python ./css-html-js-minify.py index.htm
 gzip index.html
 mv index.html.gz index.html
 xxd -i index.html > index

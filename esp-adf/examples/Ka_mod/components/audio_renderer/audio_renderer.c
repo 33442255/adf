@@ -54,7 +54,7 @@ static void init_i2s(renderer_config_t *config)
 		comm_fmt = I2S_COMM_FORMAT_PCM | I2S_COMM_FORMAT_PCM_SHORT;
     }
 
-	if ((config->output_mode == I2S)||(config->output_mode == I2S_MERUS))
+	if ((config->output_mode == I2S)||(config->output_mode == A1S)||(config->output_mode == I2S_MERUS))
 	{
 	/* don't use audio pll on buggy rev0 chips */
 	// don't do it for PDM
@@ -64,7 +64,7 @@ static void init_i2s(renderer_config_t *config)
 		} else
 			ESP_LOGI(TAG, "chip revision %d, cannot enable APLL", out_info.revision);
 	}
-	if (config->output_mode == I2S)
+	if (config->output_mode == A1S)
 	{
 		ESP_LOGI(TAG, "Start a101 codec chip");
 		a101_handle = a101_board_init();
@@ -140,10 +140,13 @@ static void init_i2s(renderer_config_t *config)
 }
 
 //KaraDio32
-void renderer_volume(uint32_t vol)
+void renderer_volume(uint32_t vol, uint8_t mod)
 {
+	if (mod == 5)
+	{
 		audio_hal_set_volume(a101_handle->audio_hal, vol);
 		vol = 254;
+	}
 
 	// log volume (magic)
 	if (vol == 1) return;  // volume 0

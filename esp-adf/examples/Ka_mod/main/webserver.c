@@ -218,7 +218,7 @@ void setVolumei(int16_t vol) {
 	if (vol <0) vol = 1;
 	if (get_audio_output_mode() == VS1053) VS1053_SetVolume(vol);
 	if (vol <3) vol--;
-	renderer_volume(vol+2); // max 256
+	renderer_volume(vol+2, get_audio_output_mode()); // max 256
 }
 void setVolume(char* vol) {
 	int16_t uvol = atoi(vol);
@@ -229,7 +229,7 @@ void setVolume(char* vol) {
 	if(vol!= NULL) {
 		if (get_audio_output_mode() == VS1053) VS1053_SetVolume(uvol);
 		if (uvol <3) uvol--;
-		renderer_volume(uvol+2); // max 256
+		renderer_volume(uvol+2, get_audio_output_mode()); // max 256
 		kprintf("##CLI.VOL#: %d\n",getIvol());		
 	}
 }

@@ -378,13 +378,14 @@ static void event_handler(void* arg, esp_event_base_t event_base,
 			if (wifiInitDone) // a completed init done
 			{
 				ESP_LOGE(TAG, "Connection tried again");
-//				clientDisconnect("Wifi Disconnected.");
+				//clientDisconnect("Wifi Disconnected.");
 				clientSilentDisconnect();
 				vTaskDelay(100);
-				clientSaveOneHeader("Wifi Disconnected.",18,METANAME);	
+				clientSaveOneHeader("Wifi Disconnected.",18,METANAME);
 				vTaskDelay(100);
 				while (esp_wifi_connect() == ESP_ERR_WIFI_SSID) vTaskDelay(10);
-			} else 
+			}
+			else
 			{
 				ESP_LOGE(TAG, "Try next AP");
 				vTaskDelay(100);	
@@ -500,8 +501,10 @@ static void start_wifi()
 		else
 		{
 			printf("WIFI TRYING TO CONNECT TO SSID %d\n",g_device->current_ap);
-			wifi_config_t wifi_config = {
-				.sta = {
+			wifi_config_t wifi_config =
+			{
+				.sta =
+				{
 					.bssid_set = 0,
 				},
 			};
@@ -517,7 +520,8 @@ static void start_wifi()
 				ESP_LOGI(TAG, "connecting %s",ssid);
 				ESP_ERROR_CHECK( esp_wifi_start() );
 //			esp_wifi_connect();			
-			} else
+			}
+			else
 			{
 				g_device->current_ap++;
 				g_device->current_ap %=3;
@@ -528,7 +532,9 @@ static void start_wifi()
 					printf("Wait for the AP\n");
 				}
 				else 
+				{
 					printf("Empty AP. Try next one\n");
+				}
 				
 				saveDeviceSettings(g_device);
 				continue;
@@ -573,8 +579,7 @@ void start_network(){
 		break;
 
 		default: // other: AP mode
-			IP4_ADDR(&ipAddr, 192,168,4,1);
-			IPADDR2_COPY(&gate,&ipAddr);
+			IP4_ADDR(&gate,192,168,4,1);
 			IP4_ADDR(&mask,255,255,255,0);
 	}	
 	
@@ -599,7 +604,9 @@ void start_network(){
 	else // mode STA
 	{	
 		if (dhcpEn ) // check if ip is valid without dhcp
+		{
 			tcpip_adapter_dhcpc_start(TCPIP_ADAPTER_IF_STA); //  run a DHCP client
+		}
 		else
 		{
 			ESP_ERROR_CHECK(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_STA, &info));
@@ -615,9 +622,13 @@ void start_network(){
 		if ( (xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,false, true, 3000) & CONNECTED_BIT) ==0) //timeout	
 		{ // enable dhcp and restart
 			if (g_device->current_ap ==1)
+			{
 				g_device->dhcpEn1 = 1;
+			}
 			else
+			{
 				g_device->dhcpEn2 = 1;
+			}
 			saveDeviceSettings(g_device);	
 			esp_restart();
 		}
@@ -938,9 +949,9 @@ void app_main()
 
 	
 	// output mode
-	//I2S, I2S_MERUS, DAC_BUILT_IN, PDM, VS1053
+	//I2S, I2S_MERUS, DAC_BUILT_IN, PDM, VS1053, A1S
 	audio_output_mode = g_device->audio_output_mode;
-	ESP_LOGI(TAG, "audio_output_mode %d\nOne of I2S=0, I2S_MERUS, DAC_BUILT_IN, PDM, VS1053",audio_output_mode);
+	ESP_LOGI(TAG, "audio_output_mode %d\nOne of I2S=0, I2S_MERUS, DAC_BUILT_IN, PDM, VS1053, A1S",audio_output_mode);
 
 	//Initialize the SPI RAM chip communications and see if it actually retains some bytes. If it
     //doesn't, warn user.

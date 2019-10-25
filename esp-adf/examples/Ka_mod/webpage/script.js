@@ -577,17 +577,17 @@ function hardware(valid) {
 			document.getElementById("output"+arr['coutput']).checked = true;
 			if (arr['coutput'] != "4") 
 			{
-				document.getElementById("vs1052Only").style.display = "none";
+				document.getElementById("vs1053Only").style.display = "none";
 			}
 			else {
-				document.getElementById("vs1052Only").style.display = "run-in";
+				document.getElementById("vs1053Only").style.display = "run-in";
 			}
 		}
 	}
 	xhr.open("POST","hardware",false);
 	xhr.setRequestHeader(content,ctype);
-	for (i=0 ;i<5;i++) if (document.getElementById('output'+i).checked) break;
-	if (i==5) coutput = 0;
+	for (i=0 ;i<6;i++) if (document.getElementById('output'+i).checked) break;
+	if (i==6) coutput = 0;
 	xhr.send("valid=" + valid 
 	+"&coutput=" + i
 	+"&");
