@@ -96,11 +96,6 @@ const int CONNECTED_AP  = 0x00000010;
 #define TAG "main"
 
 
-#ifndef IPADDR2_COPY
-#define IPADDR2_COPY(dest, src) memcpy(&gate, &ipAddr, sizeof(gate))
-#endif
-
-
 //Priorities of the reader and the decoder thread. bigger number = higher prio
 #define PRIO_READER configMAX_PRIORITIES -3
 #define PRIO_MQTT configMAX_PRIORITIES - 3
@@ -379,33 +374,28 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
 	{
 		xEventGroupSetBits(wifi_event_group, CONNECTED_AP);
 		ESP_LOGI(TAG, "Wifi connected");
+		if (wifiInitDone)
+		{
+			clientSaveOneHeader("Wifi Connected.",18,METANAME);
+			vTaskDelay(1000);
+			autoPlay();
+		} // retry
+		else
+		{
+			wifiInitDone = true;
+		}
 	}
 	else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
 	{
-		ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
-        ESP_LOGI(TAG, "got ip:%s",
-                 ip4addr_ntoa(&event->ip_info.ip));
-
 		FlashOn = 5;FlashOff = 395;
         xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
-    	if (wifiInitDone)
-    	{
-    			clientSaveOneHeader("Wifi Connected.",18,METANAME);
-    			vTaskDelay(1000);
-    			autoPlay();
-    	} // retry
-   		else
-   		{
-   			wifiInitDone = true;
-   		}
-
 	}
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_START)
     {
         FlashOn = 5;FlashOff = 395;
 
-		xEventGroupSetBits(wifi_event_group, CONNECTED_AP);
 		xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
+		xEventGroupSetBits(wifi_event_group, CONNECTED_AP);
 		wifiInitDone = true;
     }
 }
@@ -436,11 +426,10 @@ static void start_wifi()
 	char ssid[SSIDLEN]; 
 	char pass[PASSLEN];
 
+	tcpip_adapter_init();
+
     /* FreeRTOS event group to signal when we are connected & ready to make a request */
 	wifi_event_group = xEventGroupCreate();
-
-	tcpip_adapter_init();
-	tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_STA); // Don't run a DHCP client
 
 	ESP_ERROR_CHECK(esp_event_loop_create_default());
 	
@@ -467,7 +456,7 @@ static void start_wifi()
 	while (1)
 	{
 		ESP_ERROR_CHECK( esp_wifi_stop() );
-		vTaskDelay(10);
+		vTaskDelay(5);
 		
 		switch (g_device->current_ap)
 		{
@@ -550,7 +539,7 @@ static void start_wifi()
 		}
 
 		/* Wait for the callback to set the CONNECTED_BIT in the event group. */
-		if ( (xEventGroupWaitBits(wifi_event_group, CONNECTED_AP,false, true, 2000) & CONNECTED_AP) ==0) 
+		if ( (xEventGroupWaitBits(wifi_event_group, CONNECTED_AP,false, true, 2000) & CONNECTED_AP) == 0)
 		//timeout . Try the next AP
 		{
 			g_device->current_ap++;
@@ -574,7 +563,9 @@ void start_network(){
 	IP4_ADDR(&gate,192,168,4,1);
 	IP4_ADDR(&mask,255,255,255,0);
 
-	
+	tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_STA); // Don't run a DHCP client
+
+
 	switch (g_device->current_ap)
 	{
 		case STA1: //ssid1 used
@@ -591,23 +582,29 @@ void start_network(){
 		break;
 	}	
 	
-	IPADDR2_COPY(&info.ip,&ipAddr);
-	IPADDR2_COPY(&info.gw,&gate);
-	IPADDR2_COPY(&info.netmask,&mask);	
-	
+	ip4_addr_copy(info.ip, ipAddr);
+	ip4_addr_copy(info.gw, gate);
+	ip4_addr_copy(info.netmask, mask);
+
 	ESP_ERROR_CHECK(esp_wifi_get_mode(&mode));		
+
 	if (mode == WIFI_MODE_AP)
 	{
 		xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,false, true, 3000);
+		ip4_addr_copy(info.ip, ipAddr);
 		tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, &info);
-		while (info.ip.addr ==0) //wait for ip
+
+		tcpip_adapter_ip_info_t ap_ip_info;
+		ap_ip_info.ip.addr = 0;
+		while (ap_ip_info.ip.addr == 0)
 		{
-			tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_AP, &info);
+			tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_AP, &ap_ip_info);
 		}
+
 	}
 	else // mode STA
-	{	
-		if (dhcpEn ) // check if ip is valid without dhcp
+	{
+		if (dhcpEn) // check if ip is valid without dhcp
 		{
 			tcpip_adapter_dhcpc_start(TCPIP_ADAPTER_IF_STA); //  run a DHCP client
 		}
@@ -621,60 +618,92 @@ void start_network(){
 			dns_setserver(1,( ip_addr_t* ) &info.gw);				// if static ip	check dns
 		}
 
-		
-		// enable dhcp and restart
-		if ( (xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,false, true, 3000) & CONNECTED_BIT) ==0) //timeout	
-		{
+
+		// wait for ip
+		if ( (xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,false, true, 3000) & CONNECTED_BIT) == 0) //timeout
+		{ // enable dhcp and restart
 			if (g_device->current_ap ==1)
-			{
-				g_device->dhcpEn1 = 1;
-			}
+				{
+					g_device->dhcpEn1 = 1;
+				}
 			else
-			{
-				g_device->dhcpEn2 = 1;
-			}
-			saveDeviceSettings(g_device);	
+				{
+					g_device->dhcpEn2 = 1;
+				}
+			saveDeviceSettings(g_device);
 			esp_restart();
 		}
-		
-		vTaskDelay(1);	
 
+		vTaskDelay(1);
 
-		while (info.ip.addr ==0) //wait for ip
+		// retrieve the current ip
+		tcpip_adapter_ip_info_t sta_ip_info;
+		sta_ip_info.ip.addr = 0;
+		while (sta_ip_info.ip.addr == 0)
 		{
-			tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &info);
-		}		
+			tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &sta_ip_info);
+		}
 
 		const ip_addr_t *ipdns0 = dns_getserver(0);
 		printf("\nDNS: %s  \n",ip4addr_ntoa(( struct ip4_addr* ) &ipdns0));
 
+
 		if (dhcpEn) // if dhcp enabled update fields
-		{  
+		{
+			tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &info);
 			switch (g_device->current_ap)
 			{
-			case STA1: //ssid1 used			
-				IPADDR2_COPY(&g_device->ipAddr1, &info.ip);
-				IPADDR2_COPY(&g_device->mask1, &info.netmask);
-				IPADDR2_COPY(&g_device->gate1, &info.gw);	
+			case STA1: //ssid1 used
+				ip4_addr_copy(ipAddr, info.ip);
+				g_device->ipAddr1[0] = ip4_addr1_val(ipAddr);
+				g_device->ipAddr1[1] = ip4_addr2_val(ipAddr);
+				g_device->ipAddr1[2] = ip4_addr3_val(ipAddr);
+				g_device->ipAddr1[3] = ip4_addr4_val(ipAddr);
+
+				ip4_addr_copy(ipAddr, info.gw);
+				g_device->gate1[0] = ip4_addr1_val(ipAddr);
+				g_device->gate1[1] = ip4_addr2_val(ipAddr);
+				g_device->gate1[2] = ip4_addr3_val(ipAddr);
+				g_device->gate1[3] = ip4_addr4_val(ipAddr);
+
+				ip4_addr_copy(ipAddr, info.netmask);
+				g_device->mask1[0] = ip4_addr1_val(ipAddr);
+				g_device->mask1[1] = ip4_addr2_val(ipAddr);
+				g_device->mask1[2] = ip4_addr3_val(ipAddr);
+				g_device->mask1[3] = ip4_addr4_val(ipAddr);
 			break;
-			case STA2: //ssid1 used			
-				IPADDR2_COPY(&g_device->ipAddr2, &info.ip);
-				IPADDR2_COPY(&g_device->mask2, &info.netmask);
-				IPADDR2_COPY(&g_device->gate2, &info.gw);	
+
+			case STA2: //ssid1 used
+				ip4_addr_copy(ipAddr, info.ip);
+				g_device->ipAddr2[0] = ip4_addr1_val(ipAddr);
+				g_device->ipAddr2[1] = ip4_addr2_val(ipAddr);
+				g_device->ipAddr2[2] = ip4_addr3_val(ipAddr);
+				g_device->ipAddr2[3] = ip4_addr4_val(ipAddr);
+
+				ip4_addr_copy(ipAddr, info.gw);
+				g_device->gate2[0] = ip4_addr1_val(ipAddr);
+				g_device->gate2[1] = ip4_addr2_val(ipAddr);
+				g_device->gate2[2] = ip4_addr3_val(ipAddr);
+				g_device->gate2[3] = ip4_addr4_val(ipAddr);
+
+				ip4_addr_copy(ipAddr, info.netmask);
+				g_device->mask2[0] = ip4_addr1_val(ipAddr);
+				g_device->mask2[1] = ip4_addr2_val(ipAddr);
+				g_device->mask2[2] = ip4_addr3_val(ipAddr);
+				g_device->mask2[3] = ip4_addr4_val(ipAddr);
 			break;
 			}
 		}
-		saveDeviceSettings(g_device);	
+		saveDeviceSettings(g_device);
+		tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, "karadio32");
 	}
-
 	strcpy(localIp , ip4addr_ntoa(&info.ip));
 	printf("IP: %s\n\n",ip4addr_ntoa(&info.ip));
-
-	tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, "karadio32");
 	
+
 	lcd_welcome(localIp,"IP found");
 	vTaskDelay(10);
-	
+
 }
 
 
