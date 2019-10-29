@@ -332,7 +332,7 @@ static void init_hardware()
 
 
 /* event handler for pre-defined wifi events */
-static void event_handler(void* arg, esp_event_base_t event_base,
+static void wifi_event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data)
 {
     //EventGroupHandle_t wifi_event = ctx;
@@ -341,23 +341,6 @@ static void event_handler(void* arg, esp_event_base_t event_base,
 	{
 		FlashOn = FlashOff = 100;
         esp_wifi_connect();
-    }
-	else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_CONNECTED)
-	{
-		xEventGroupSetBits(wifi_event_group, CONNECTED_AP);
-		ESP_LOGI(TAG, "Wifi connected");		
-		if (wifiInitDone) 
-		{
-			clientSaveOneHeader("Wifi Connected.",18,METANAME);	
-			vTaskDelay(1000);
-			autoPlay();
-			} // retry
-		else wifiInitDone = true;
-	}
-	else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
-	{
- 		FlashOn = 5;FlashOff = 395;
-        xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
     }
 	else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
 	{
@@ -391,6 +374,31 @@ static void event_handler(void* arg, esp_event_base_t event_base,
 				vTaskDelay(100);	
 			} // init failed?
 		}
+	}
+	else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_CONNECTED)
+	{
+		xEventGroupSetBits(wifi_event_group, CONNECTED_AP);
+		ESP_LOGI(TAG, "Wifi connected");
+	}
+	else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
+	{
+		ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
+        ESP_LOGI(TAG, "got ip:%s",
+                 ip4addr_ntoa(&event->ip_info.ip));
+
+		FlashOn = 5;FlashOff = 395;
+        xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
+    	if (wifiInitDone)
+    	{
+    			clientSaveOneHeader("Wifi Connected.",18,METANAME);
+    			vTaskDelay(1000);
+    			autoPlay();
+    	} // retry
+   		else
+   		{
+   			wifiInitDone = true;
+   		}
+
 	}
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_START)
     {
@@ -441,8 +449,8 @@ static void start_wifi()
 //    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
 	
    // ESP_ERROR_CHECK( esp_event_loop_init(event_handler, wifi_event_group) );
-    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL));
 
 	if (g_device->current_ap == APMODE) 
 	{
@@ -494,7 +502,7 @@ static void start_wifi()
 			ESP_LOGE(TAG, "The default AP is  WifiKaRadio. Connect your wifi to it.\nThen connect a webbrowser to 192.168.4.1 and go to Setting\nMay be long to load the first time.Be patient.");
 
 			vTaskDelay(1);
-			ESP_ERROR_CHECK( esp_wifi_start() );			
+			ESP_ERROR_CHECK( esp_wifi_start() );
 			
 			audio_output_mode = I2S;
 		}
@@ -562,25 +570,25 @@ void start_network(){
 	ip4_addr_t gate;
 	uint8_t dhcpEn = 0;
 
+	IP4_ADDR(&ipAddr,192,168,4,1);
+	IP4_ADDR(&gate,192,168,4,1);
+	IP4_ADDR(&mask,255,255,255,0);
+
 	
 	switch (g_device->current_ap)
 	{
 		case STA1: //ssid1 used
 			IP4_ADDR(&ipAddr, g_device->ipAddr1[0], g_device->ipAddr1[1],g_device->ipAddr1[2], g_device->ipAddr1[3]);
-			IP4_ADDR(&gate, g_device->gate1[0],g_device->gate1[1],g_device->gate1[2], g_device->gate1[3]);
-			IP4_ADDR(&mask, g_device->mask1[0], g_device->mask1[1],g_device->mask1[2], g_device->mask1[3]);
+			IP4_ADDR(&gate, g_device->gate1[0],g_device->gate1[1],g_device->gate1[2],g_device->gate1[3]);
+			IP4_ADDR(&mask, g_device->mask1[0],g_device->mask1[1],g_device->mask1[2],g_device->mask1[3]);
 			dhcpEn = g_device->dhcpEn1;
 		break;
 		case STA2: //ssid2 used
 			IP4_ADDR(&ipAddr, g_device->ipAddr2[0], g_device->ipAddr2[1],g_device->ipAddr2[2], g_device->ipAddr2[3]);
-			IP4_ADDR(&gate, g_device->gate2[0],g_device->gate2[1],g_device->gate2[2], g_device->gate2[3]);
-			IP4_ADDR(&mask, g_device->mask2[0], g_device->mask2[1],g_device->mask2[2], g_device->mask2[3]);
+			IP4_ADDR(&gate, g_device->gate2[0],g_device->gate2[1],g_device->gate2[2],g_device->gate2[3]);
+			IP4_ADDR(&mask, g_device->mask2[0],g_device->mask2[1],g_device->mask2[2],g_device->mask2[3]);
 			dhcpEn = g_device->dhcpEn2;
 		break;
-
-		default: // other: AP mode
-			IP4_ADDR(&gate,192,168,4,1);
-			IP4_ADDR(&mask,255,255,255,0);
 	}	
 	
 	IPADDR2_COPY(&info.ip,&ipAddr);
@@ -590,16 +598,12 @@ void start_network(){
 	ESP_ERROR_CHECK(esp_wifi_get_mode(&mode));		
 	if (mode == WIFI_MODE_AP)
 	{
-			xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,false, true, 3000);
-			IPADDR2_COPY(&info.ip,&ipAddr);
-			tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, &info);
-//			g_device->dhcpEn1 = g_device->dhcpEn2 = 1;
-//			IPADDR2_COPY(&g_device->mask1, &mask);
-//			IPADDR2_COPY(&g_device->mask2, &mask);
-//			saveDeviceSettings(g_device);	
-			strcpy(localIp , ip4addr_ntoa(&info.ip));
-			printf("IP: %s\n\n",ip4addr_ntoa(&info.ip));	
-	
+		xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,false, true, 3000);
+		tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, &info);
+		while (info.ip.addr ==0) //wait for ip
+		{
+			tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_AP, &info);
+		}
 	}
 	else // mode STA
 	{	
@@ -618,9 +622,9 @@ void start_network(){
 		}
 
 		
-		// wait for ip						
+		// enable dhcp and restart
 		if ( (xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,false, true, 3000) & CONNECTED_BIT) ==0) //timeout	
-		{ // enable dhcp and restart
+		{
 			if (g_device->current_ap ==1)
 			{
 				g_device->dhcpEn1 = 1;
@@ -634,27 +638,18 @@ void start_network(){
 		}
 		
 		vTaskDelay(1);	
-		// retrieve the current ip	
-		tcpip_adapter_ip_info_t ip_info;
-		ip_info.ip.addr =0;		
-		while (ip_info.ip.addr ==0)
-		{
-			if (mode == WIFI_MODE_AP)
-				tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_AP, &ip_info);
-			else	
-				tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip_info);
-		}		
-		const ip_addr_t *ipdns0 = dns_getserver(0);
-//		ip_addr_t ipdns0 = dns_getserver(0);
-//		ip_addr_t ipdns1 = dns_getserver(1);
-		printf("\nDNS: %s  \n",ip4addr_ntoa(( struct ip4_addr* ) &ipdns0));
-		strcpy(localIp , ip4addr_ntoa(&ip_info.ip));
-		printf("IP: %s\n\n",ip4addr_ntoa(&ip_info.ip));
 
-		
+
+		while (info.ip.addr ==0) //wait for ip
+		{
+			tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &info);
+		}		
+
+		const ip_addr_t *ipdns0 = dns_getserver(0);
+		printf("\nDNS: %s  \n",ip4addr_ntoa(( struct ip4_addr* ) &ipdns0));
+
 		if (dhcpEn) // if dhcp enabled update fields
 		{  
-			tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &info);
 			switch (g_device->current_ap)
 			{
 			case STA1: //ssid1 used			
@@ -670,8 +665,12 @@ void start_network(){
 			}
 		}
 		saveDeviceSettings(g_device);	
-		tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, "karadio32");	
 	}
+
+	strcpy(localIp , ip4addr_ntoa(&info.ip));
+	printf("IP: %s\n\n",ip4addr_ntoa(&info.ip));
+
+	tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, "karadio32");
 	
 	lcd_welcome(localIp,"IP found");
 	vTaskDelay(10);

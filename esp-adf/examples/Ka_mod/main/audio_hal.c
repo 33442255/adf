@@ -31,16 +31,20 @@ static const char *TAG = "AUDIO_HAL";
 
 void *audio_calloc(size_t nmemb, size_t size)
 {
-    void *data =  NULL;
-#if CONFIG_SPIRAM_BOOT_INIT
-    data = heap_caps_malloc(nmemb * size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-    if (data) {
-        memset(data, 0, nmemb * size);
-    }
-#else
-    data = calloc(nmemb, size);
-#endif
-    return data;
+	void *data =  NULL;
+	if (xPortGetFreeHeapSize() > 0x80000)
+	{
+		data = heap_caps_malloc(nmemb * size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+		if (data)
+		{
+			memset(data, 0, nmemb * size);
+		}
+	}
+	else
+	{
+		data = calloc(nmemb, size);
+	}
+	return data;
 }
 
 #define AUDIO_HAL_CHECK_NULL(a, format, b, ...) \
