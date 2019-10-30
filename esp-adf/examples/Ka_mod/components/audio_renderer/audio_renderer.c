@@ -14,8 +14,8 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_log.h"
 #include <freertos/task.h>
-#include <driver/dac.h>
 #include "driver/gpio.h"
+#include "driver/dac.h"
 #include "gpio.h"
 #include "app_main.h"
 #include "MerusAudio.h"

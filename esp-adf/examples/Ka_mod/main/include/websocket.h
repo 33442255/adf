@@ -12,11 +12,9 @@ Inspirated by:
 // max size of the WS Message Header
 #define WEBSOCKETS_MAX_HEADER_SIZE  (14)
 
-
-
 typedef  uint32_t u32;
-#include "crypto/sha1_i.h"
 
+#include "crypto/sha1_i.h"
 
 #define NBCLIENT 5
 #define MAXDATA	 528
