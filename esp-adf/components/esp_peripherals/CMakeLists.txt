@@ -10,8 +10,8 @@ set(COMPONENT_ADD_INCLUDEDIRS ./include
 )
 
 # Edit following two lines to set component requirements (see docs)
-set(COMPONENT_REQUIRES driver  audio_hal esp_adc_cal audio_sal fatfs console audio_pipeline audio_board spiffs display_service esp_dispatcher nvs_flash bt)
-set(COMPONENT_PRIV_REQUIRES nvs_flash)
+set(COMPONENT_REQUIRES driver  audio_hal esp_adc_cal audio_sal fatfs console audio_pipeline audio_board spiffs display_service esp_dispatcher bt mbedtls)
+set(COMPONENT_PRIV_REQUIRES )
 
 set(COMPONENT_SRCS ./esp_peripherals.c
                 ./periph_adc_button.c
