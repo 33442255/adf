@@ -256,7 +256,4 @@ idf_component_register(SRCS
 
                     include_directories ("include" "../components/audio_player/" "../components/audio_renderer/"  "../components/common/" "../components/fdk-aac_decoder/"  "../components/fifo/" "../components/mad/" "../components/MerusAudio/" "../components/mp3_decoder/" "../components/u8g2/csrc" "../components/ucglib/csrc/" "../components/xpt2046/"
 					"../components/audio_player/include/" "../components/audio_renderer/include/"   "../components/common/include/" "../components/fdk-aac_decoder/include/"  "../components/fdk-aac-oreo-m8/libAACdec/include/" "../components/fdk-aac-oreo-m8/libFDK/include" "../components/fdk-aac-oreo-m8/libSBRdec/include/" "../components/fdk-aac-oreo-m8/libPCMutils/include/" "../components/fdk-aac-oreo-m8/libSYS/include/" "../components/fdk-aac-oreo-m8/libMPEGTPdec/include/" "../components/fifo/include/" "../components/mad/" "../components/MerusAudio/include/" "../components/mp3_decoder/include/" "../components/u8g2/csrc/" "../components/ucglib/csrc/" "../components/xpt2046/" 
-					"../components/fdk-aac-oreo-m8/libSBRenc/include/"
-					"../components/fdk-aac-oreo-m8/libMpegTPEnc/include/"
-					"../components/fdk-aac-oreo-m8/libAACenc/include"
 					)
