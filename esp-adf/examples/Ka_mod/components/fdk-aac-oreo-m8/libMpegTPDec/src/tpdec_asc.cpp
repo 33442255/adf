@@ -1180,7 +1180,6 @@ TRANSPORTDEC_ERROR EldSpecificConfig_Parse(
       /* add future eld extension configs here */
     }
   }
-bail:
   return (ErrorStatus);
 }
 #endif /* TP_ELD_ENABLE */

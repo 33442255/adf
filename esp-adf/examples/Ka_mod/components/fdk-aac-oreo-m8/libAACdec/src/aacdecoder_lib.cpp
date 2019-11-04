@@ -105,6 +105,7 @@ amm-info@iis.fraunhofer.de
 
  #include "aacdec_drc.h"
 
+ #include "limiter.h"
 
 
 /* Decoder library info */
