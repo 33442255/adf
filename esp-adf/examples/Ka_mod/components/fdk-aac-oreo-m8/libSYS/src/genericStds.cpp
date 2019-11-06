@@ -273,7 +273,21 @@ void  FDKafree (void *ptr)
  *--------------------------------------------------------------------------*/
 void *FDKcalloc_L(const UINT dim, const UINT size, MEMORY_SECTION s)
 {
-	return FDKcalloc(dim, size);
+  int a_size;
+
+  if (s == SECT_DATA_EXTERN)
+    goto fallback;
+
+  a_size = ((dim*size+3)&0xfffffffc); /* force 4 byte alignment (1111 .... 1111 1100) */
+
+
+
+
+
+  //printf("Warning, out of internal memory\n");
+
+fallback:
+  return FDKcalloc(dim, size);
 }
 #endif /* FUNCTION_FDKcalloc_L */
 
@@ -395,8 +409,7 @@ void FDKrewind(FDKFILE *fp) { FDKfseek((FILE*)fp,0,FDKSEEK_SET); }
 
 UINT FDKfwrite_EL(void *ptrf, INT size, UINT nmemb, FDKFILE *fp) {
 
-    int le = IS_LITTLE_ENDIAN();
-	if (le) {
+    if (IS_LITTLE_ENDIAN()) {
       FDKfwrite(ptrf, size, nmemb, fp);
     } else {
       UINT n;
@@ -446,8 +459,7 @@ UINT FDKfread_EL(void *dst, INT size, UINT nmemb, FDKFILE *fp) {
       return err;
     }
   }
-  int le = IS_LITTLE_ENDIAN();
-  if (!le && size > 1) {
+  if (!IS_LITTLE_ENDIAN() && size > 1) {
     ptr = (UCHAR*)dst;
     for (n=0; n<nmemb; n++) {
       for (s0=0, s1=size-1; s0 < s1; s0++, s1--) {

@@ -267,9 +267,12 @@ TRANSPORTDEC_ERROR CLatmDemux_ReadStreamMuxConfig(
         } else {
           if (pLatmDemux->m_AudioMuxVersion == 1)
           {
-            UINT ascLen = CLatmDemux_GetValue(bs);
-            //UINT ascStartPos = FDKgetValidBits(bs);
-            FDK_BITSTREAM tmpBs = *bs;
+            FDK_BITSTREAM tmpBs;
+            UINT ascStartPos, ascLen=0;
+
+            ascLen = CLatmDemux_GetValue(bs);
+            ascStartPos = FDKgetValidBits(bs);
+            tmpBs = *bs;
             FDKsyncCache(&tmpBs);
             tmpBs.hBitBuf.ValidBits = ascLen;
             
