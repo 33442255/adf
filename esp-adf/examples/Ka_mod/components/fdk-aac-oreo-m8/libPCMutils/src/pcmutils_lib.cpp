@@ -1989,7 +1989,7 @@ PCMDMX_ERROR pcmDmx_ApplyFrame (
   if ( (pParam->expiryFrame > 0)
     && (++self->bsMetaData[0].expiryCount > pParam->expiryFrame) )
   { /* The metadata read from bitstream is too old. */
-    PCMDMX_ERROR err = pcmDmx_Reset(self, PCMDMX_RESET_BS_DATA);
+    //PCMDMX_ERROR err = pcmDmx_Reset(self, PCMDMX_RESET_BS_DATA);
     FDK_ASSERT(err == PCMDMX_OK);
   }
   FDKmemcpy(&bsMetaData, &self->bsMetaData[pParam->frameDelay], sizeof(DMX_BS_META_DATA));

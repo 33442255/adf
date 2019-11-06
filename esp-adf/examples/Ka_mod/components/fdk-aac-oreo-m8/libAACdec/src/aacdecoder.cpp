@@ -371,20 +371,6 @@ static AAC_DECODER_ERROR CDataStreamElement_Read (
     aacDecoder_drcMarkPayload( self->hDrcInfo, bs, DVB_DRC_ANC_DATA );
   }
 
-  {
-    PCMDMX_ERROR dmxErr = PCMDMX_OK;
-
-    /* Move to the beginning of the data junk */
-    FDKpushBack(bs, dataStart-FDKgetValidBits(bs));
-
-    /* Read DMX meta-data */
-    dmxErr = pcmDmx_Parse (
-                     self->hPcmUtils,
-                     bs,
-                     dseBits,
-                     0 /* not mpeg2 */ );
-    }
-
   /* Move to the very end of the element. */
   FDKpushBiDirectional(bs, FDKgetValidBits(bs)-dataStart+dseBits);
 
