@@ -60,12 +60,12 @@ esp_err_t a101_board_deinit(audio_board_handle_t audio_board)
  * operate function of codec
  */
 audio_hal_func_t AUDIO_CODEC_AC101_CODEC_HANDLE = {
-    .audio_codec_initialize = ac101_init,
-    .audio_codec_deinitialize = ac101_deinit,
-    .audio_codec_ctrl = ac101_ctrl_state,
-    .audio_codec_config_iface = ac101_config_i2s,
-    .audio_codec_set_volume = ac101_set_voice_volume,
-    .audio_codec_get_volume = ac101_get_voice_volume,
+    .audio_codec_initialize = AC101_init,
+    .audio_codec_deinitialize = AC101_deinit,
+    .audio_codec_ctrl = AC101_ctrl_state,
+    .audio_codec_config_iface = AC101_config_i2s,
+    .audio_codec_set_volume = AC101_set_voice_volume,
+    .audio_codec_get_volume = AC101_get_voice_volume,
 };
 
 
@@ -183,7 +183,7 @@ void set_codec_clk(audio_hal_iface_samples_t sampledata)
 	AC101_Write_Reg(I2S_SR_CTRL, sample);
 }
 
-esp_err_t ac101_init(audio_hal_codec_config_t* codec_cfg) {
+esp_err_t AC101_init(audio_hal_codec_config_t* codec_cfg) {
 	
 	if(i2c_init() < 0) return -1;
 	
@@ -229,11 +229,11 @@ esp_err_t ac101_init(audio_hal_codec_config_t* codec_cfg) {
 	res |= AC101_Write_Reg(0x58, 0xeabd);
 
     ESP_LOGI(AC101_TAG, "init done");
-    ac101_pa_power(true);
+    AC101_pa_power(true);
 	return res;
 }
 
-int ac101_get_spk_volume(void)
+int AC101_get_spk_volume(void)
 {
     int res;
     res = AC101_read_Reg(SPKOUT_CTRL);
@@ -241,11 +241,14 @@ int ac101_get_spk_volume(void)
     return res*2;
 }
 
-esp_err_t ac101_set_spk_volume(uint8_t volume)
+esp_err_t AC101_set_spk_volume(uint8_t volume)
 {
+	if (volume > 0x3f) volume = 0x3f;
+	volume = volume/2;
+
 	uint16_t res;
 	esp_err_t ret;
-	volume = volume/2;
+
 	res = AC101_read_Reg(SPKOUT_CTRL);
 	res &= (~0x1f);
 	volume &= 0x1f;
@@ -254,15 +257,17 @@ esp_err_t ac101_set_spk_volume(uint8_t volume)
 	return ret;
 }
 
-int ac101_get_earph_volume(void)
+int AC101_get_earph_volume(void)
 {
     int res;
     res = AC101_read_Reg(HPOUT_CTRL);
     return (res>>4)&0x3f;
 }
 
-esp_err_t ac101_set_earph_volume(uint8_t volume)
+esp_err_t AC101_set_earph_volume(uint8_t volume)
 {
+	if (volume > 0x3f) volume = 0x3f;
+	
 	uint16_t res,tmp;
 	esp_err_t ret;
 	res = AC101_read_Reg(HPOUT_CTRL);
@@ -274,7 +279,7 @@ esp_err_t ac101_set_earph_volume(uint8_t volume)
 	return ret;
 }
 
-esp_err_t ac101_set_output_mixer_gain(ac_output_mixer_gain_t gain,ac_output_mixer_source_t source)
+esp_err_t AC101_set_output_mixer_gain(ac_output_mixer_gain_t gain,ac_output_mixer_source_t source)
 {
 	uint16_t regval,temp,clrbit;
 	esp_err_t ret;
@@ -328,7 +333,7 @@ esp_err_t AC101_start(ac_module_t mode)
     	//* Enable Speaker output
 		res |= AC101_Write_Reg(SPKOUT_CTRL, 0xeabd);
 		vTaskDelay(10 / portTICK_PERIOD_MS);
-		ac101_set_voice_volume(30);
+		AC101_set_voice_volume(30);
     }
 
     return res;
@@ -342,13 +347,13 @@ esp_err_t AC101_stop(ac_module_t mode)
 	return res;
 }
 
-esp_err_t ac101_deinit(void)
+esp_err_t AC101_deinit(void)
 {
 
 	return	AC101_Write_Reg(CHIP_AUDIO_RS, 0x123);		//soft reset
 }
 
-esp_err_t ac101_ctrl_state(audio_hal_codec_mode_t mode, audio_hal_ctrl_t ctrl_state)
+esp_err_t AC101_ctrl_state(audio_hal_codec_mode_t mode, audio_hal_ctrl_t ctrl_state)
 {
 	int res = 0;
 	int es_mode_t = 0;
@@ -379,7 +384,7 @@ esp_err_t ac101_ctrl_state(audio_hal_codec_mode_t mode, audio_hal_ctrl_t ctrl_st
 	return res;
 }
 
-esp_err_t ac101_config_i2s(audio_hal_codec_mode_t mode, audio_hal_codec_i2s_iface_t* iface)
+esp_err_t AC101_config_i2s(audio_hal_codec_mode_t mode, audio_hal_codec_i2s_iface_t* iface)
 {
 	esp_err_t res = 0;
 	int bits = 0;
@@ -477,21 +482,21 @@ esp_err_t AC101_i2s_config_clock(ac_i2s_clock_t *cfg)
 	return res;
 }
 
-esp_err_t ac101_set_voice_volume(int volume)
+esp_err_t AC101_set_voice_volume(int volume)
 {
 	esp_err_t res;
-	res = ac101_set_earph_volume(volume);
-	res |= ac101_set_spk_volume(volume);
+	res = AC101_set_earph_volume(volume);
+	res |= AC101_set_spk_volume(volume);
 	return res;
 }
 
-esp_err_t ac101_get_voice_volume(int* volume)
+esp_err_t AC101_get_voice_volume(int* volume)
 {
-	*volume = ac101_get_earph_volume();
+	*volume = AC101_get_earph_volume();
 	return 0;
 }
 
-void ac101_pa_power(bool enable)
+void AC101_pa_power(bool enable)
 {
     gpio_config_t  io_conf;
     memset(&io_conf, 0, sizeof(io_conf));

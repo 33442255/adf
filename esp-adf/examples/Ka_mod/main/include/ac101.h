@@ -217,12 +217,12 @@ extern audio_hal_func_t AUDIO_CODEC_AC101_CODEC_HANDLE;
 };
 
 
-esp_err_t ac101_init(audio_hal_codec_config_t* codec_cfg);
-esp_err_t ac101_deinit(void);
-esp_err_t ac101_ctrl_state(audio_hal_codec_mode_t mode, audio_hal_ctrl_t ctrl_state);
-esp_err_t ac101_config_i2s(audio_hal_codec_mode_t mode, audio_hal_codec_i2s_iface_t* iface);
-esp_err_t ac101_set_voice_volume(int volume);
-esp_err_t ac101_get_voice_volume(int* volume);
-void ac101_pa_power(bool enable);
+esp_err_t AC101_init(audio_hal_codec_config_t* codec_cfg);
+esp_err_t AC101_deinit(void);
+esp_err_t AC101_ctrl_state(audio_hal_codec_mode_t mode, audio_hal_ctrl_t ctrl_state);
+esp_err_t AC101_config_i2s(audio_hal_codec_mode_t mode, audio_hal_codec_i2s_iface_t* iface);
+esp_err_t AC101_set_voice_volume(int volume);
+esp_err_t AC101_get_voice_volume(int* volume);
+void AC101_pa_power(bool enable);
 
 #endif
