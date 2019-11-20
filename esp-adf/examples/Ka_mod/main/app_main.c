@@ -422,8 +422,7 @@ static void start_wifi()
 	char ssid[SSIDLEN]; 
 	char pass[PASSLEN];
 
-	tcpip_adapter_init();
-
+	esp_netif_init();
     /* FreeRTOS event group to signal when we are connected & ready to make a request */
 	wifi_event_group = xEventGroupCreate();
 
