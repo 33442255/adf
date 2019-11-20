@@ -202,9 +202,12 @@ int ac101_get_spk_volume(void)
 
 esp_err_t ac101_set_spk_volume(uint8_t volume)
 {
+	if (volume > 0x3f) volume = 0x3f;
+	volume = volume/2;
+
 	uint16_t res;
 	esp_err_t ret;
-	volume = volume/2;
+
 	res = ac101_read_reg(SPKOUT_CTRL);
 	res &= (~0x1f);
 	volume &= 0x1f;
@@ -222,6 +225,8 @@ int ac101_get_earph_volume(void)
 
 esp_err_t ac101_set_earph_volume(uint8_t volume)
 {
+	if (volume > 0x3f) volume = 0x3f;
+	
 	uint16_t res,tmp;
 	esp_err_t ret;
 	res = ac101_read_reg(HPOUT_CTRL);

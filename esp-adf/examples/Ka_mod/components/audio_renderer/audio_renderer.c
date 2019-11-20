@@ -144,7 +144,7 @@ void renderer_volume(uint32_t vol, uint8_t mod)
 {
 	if (mod == 5)
 	{
-		audio_hal_set_volume(a101_handle->audio_hal, vol);
+		audio_hal_set_volume(a101_handle->audio_hal, vol/4);
 		vol = 254;
 	}
 
