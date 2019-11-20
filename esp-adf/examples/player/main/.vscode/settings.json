@@ -1,8 +1,0 @@
-{
-    "C_Cpp.errorSquiggles": "Enabled",
-    "files.associations": {
-        "freertos.h": "c",
-        "event_groups.h": "c",
-        "task.h": "c"
-    }
-}

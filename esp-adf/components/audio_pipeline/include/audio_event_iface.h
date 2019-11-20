@@ -27,7 +27,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
-#include "rom/queue.h"
+#include "sys/queue.h"
 
 #ifdef __cplusplus
 extern "C" {

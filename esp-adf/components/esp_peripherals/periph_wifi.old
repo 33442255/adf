@@ -32,7 +32,7 @@
 #include "soc/rtc_cntl_reg.h"
 #include "soc/sens_reg.h"
 #include "esp_wifi.h"
-#include "esp_event_loop.h"
+#include "esp_event.h"
 #include "esp_log.h"
 #include "esp_smartconfig.h"
 #include "esp_system.h"
@@ -248,8 +248,7 @@ static esp_err_t _wifi_init(esp_periph_handle_t self)
         return ESP_FAIL;
     }
  
-    tcpip_adapter_init();
-
+    esp_netif_init();
 
     if (esp_event_loop_get_queue() == NULL) 
 	{

@@ -31,7 +31,7 @@
 #include "esp_log.h"
 #include "audio_element.h"
 
-#include "rom/queue.h"
+#include "sys/queue.h"
 #include "audio_pipeline.h"
 #include "audio_event_iface.h"
 #include "audio_mem.h"

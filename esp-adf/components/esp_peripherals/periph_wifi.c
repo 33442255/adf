@@ -249,8 +249,7 @@ static esp_err_t _wifi_init(esp_periph_handle_t self)
         return ESP_FAIL;
     }
  
-    tcpip_adapter_init();
-
+    esp_netif_init();
 
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 

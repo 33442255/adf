@@ -31,7 +31,7 @@
 #include "freertos/event_groups.h"
 #include "freertos/ringbuf.h"
 
-#include "rom/queue.h"
+#include "sys/queue.h"
 #include "esp_log.h"
 #include "audio_event_iface.h"
 

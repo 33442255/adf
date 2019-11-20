@@ -27,7 +27,7 @@
 
 #include "freertos/FreeRTOS.h"
 
-#include "rom/queue.h"
+#include "sys/queue.h"
 #include "esp_err.h"
 #include "audio_event_iface.h"
 #include "ringbuf.h"

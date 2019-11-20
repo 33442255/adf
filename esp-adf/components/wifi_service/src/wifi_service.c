@@ -36,7 +36,7 @@
 #include "esp_log.h"
 #include "esp_event.h"
 #include "esp_wifi.h"
-#include "esp_event_loop.h"
+#include "esp_event.h"
 
 static const char *TAG                  = "WIFI_SERV";
 const static int WIFI_TASK_DESTROY_BIT  = BIT0;

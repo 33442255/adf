@@ -43,8 +43,7 @@ void app_main(void)
         ESP_ERROR_CHECK(nvs_flash_erase());
         err = nvs_flash_init();
     }
-    tcpip_adapter_init();
-
+    esp_netif_init();
     audio_pipeline_handle_t pipeline;
     audio_element_handle_t http_stream_reader, i2s_stream_writer, mp3_decoder;
 
@@ -58,7 +57,7 @@ void app_main(void)
     int player_volume;
     audio_hal_get_volume(board_handle->audio_hal, &player_volume);
 	
-	player_volume = 10;
+	player_volume = 20;
 	audio_hal_set_volume(board_handle->audio_hal, player_volume);
 
     ESP_LOGI(TAG, "[2.0] Create audio pipeline for playback");
@@ -89,7 +88,8 @@ void app_main(void)
 
     ESP_LOGI(TAG, "[2.6] Set up  uri (http as http_stream, mp3 as mp3 decoder, and default output is i2s)");
 //    audio_element_set_uri(http_stream_reader, "https://dl.espressif.com/dl/audio/ff-16b-2c-44100hz.mp3");
-    audio_element_set_uri(http_stream_reader, "http://icy.unitedradio.it/VirginRogerWaters.mp3");
+    //audio_element_set_uri(http_stream_reader, "http://icy.unitedradio.it/VirginRogerWaters.mp3");
+	audio_element_set_uri(http_stream_reader, "http://ic4.101.ru:8000/a161");
 
 
     ESP_LOGI(TAG, "[ 3 ] Start and wait for Wi-Fi network");
