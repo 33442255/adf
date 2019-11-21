@@ -59,7 +59,7 @@ void spi_give_semaphore(xSemaphoreHandle isSPI) {
 }
 
 
-void VS1053_spi_init(){
+void Spi_init(){
 	esp_err_t ret;
 	gpio_num_t miso;
 	gpio_num_t mosi;
