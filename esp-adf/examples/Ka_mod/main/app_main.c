@@ -50,7 +50,7 @@ Copyright (C) 2017  KaraWin
 #include "spiram_fifo.h"
 #include "audio_renderer.h"
 //#include "bt_speaker.h"
-#include "bt_config.h"
+//#include "bt_config.h"
 //#include "mdns_task.h"
 #include "audio_player.h"
 #include <u8g2.h>
@@ -64,7 +64,7 @@ Copyright (C) 2017  KaraWin
 
 /////////////////////////////////////////////////////
 ///////////////////////////
-#include "bt_config.h"
+//#include "bt_config.h"
 #include "driver/gpio.h"
 #include "driver/i2c.h"
 //#include "esp_wifi.h"
@@ -427,6 +427,8 @@ static void start_wifi()
 	wifi_event_group = xEventGroupCreate();
 
 	ESP_ERROR_CHECK(esp_event_loop_create_default());
+ 
+    esp_netif_create_default_wifi_sta();
 	
 	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
@@ -482,7 +484,7 @@ static void start_wifi()
 					.beacon_interval = 200
 				},
 			};
-			ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap_config));
+			ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &ap_config));
 			ESP_LOGE(TAG, "The default AP is  WifiKaRadio. Connect your wifi to it.\nThen connect a webbrowser to 192.168.4.1 and go to Setting\nMay be long to load the first time.Be patient.");
 
 			vTaskDelay(1);
@@ -507,7 +509,7 @@ static void start_wifi()
 			if  (strlen(ssid)/*&&strlen(pass)*/)
 			{
 				esp_wifi_disconnect();
-				ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+				ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
 //				ESP_LOGI(TAG, "connecting %s, %d, %s, %d",ssid,strlen((char*)(wifi_config.sta.ssid)),pass,strlen((char*)(wifi_config.sta.password)));
 				ESP_LOGI(TAG, "connecting %s",ssid);
 				ESP_ERROR_CHECK( esp_wifi_start() );
@@ -547,7 +549,8 @@ static void start_wifi()
 
 void start_network(){
 //	struct device_settings *g_device;	
-	tcpip_adapter_ip_info_t info;
+
+	esp_netif_ip_info_t info;
 	wifi_mode_t mode;	
 	ip4_addr_t ipAddr;
 	ip4_addr_t mask;
@@ -558,7 +561,17 @@ void start_network(){
 	IP4_ADDR(&gate,192,168,4,1);
 	IP4_ADDR(&mask,255,255,255,0);
 
-	tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_STA); // Don't run a DHCP client
+    esp_netif_config_t cfg_sta = ESP_NETIF_DEFAULT_WIFI_STA();
+ 
+    esp_netif_t *sta = esp_netif_new(&cfg_sta);
+ 
+    esp_netif_attach_wifi_station(sta);
+ 
+    esp_netif_config_t cfg_ap = ESP_NETIF_DEFAULT_WIFI_AP();
+    
+	esp_netif_t *ap  = esp_netif_new(&cfg_ap);
+ 
+	esp_netif_dhcpc_stop(sta); // Don't run a DHCP client
 
 
 	switch (g_device->current_ap)
@@ -587,13 +600,13 @@ void start_network(){
 	{
 		xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,false, true, 3000);
 		ip4_addr_copy(info.ip, ipAddr);
-		tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, &info);
+		esp_netif_set_ip_info(ap, &info);
 
-		tcpip_adapter_ip_info_t ap_ip_info;
+		esp_netif_ip_info_t ap_ip_info;
 		ap_ip_info.ip.addr = 0;
 		while (ap_ip_info.ip.addr == 0)
 		{
-			tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_AP, &ap_ip_info);
+			esp_netif_get_ip_info(ap, &ap_ip_info);
 		}
 
 	}
@@ -601,11 +614,11 @@ void start_network(){
 	{
 		if (dhcpEn) // check if ip is valid without dhcp
 		{
-			tcpip_adapter_dhcpc_start(TCPIP_ADAPTER_IF_STA); //  run a DHCP client
+			esp_netif_dhcpc_start(sta); //  run a DHCP client
 		}
 		else
 		{
-			ESP_ERROR_CHECK(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_STA, &info));
+			ESP_ERROR_CHECK(esp_netif_set_ip_info(sta, &info));
 			dns_clear_servers(false);
 			IP_SET_TYPE(( ip_addr_t* )&info.gw, IPADDR_TYPE_V4); // mandatory
 			(( ip_addr_t* )&info.gw)->type = IPADDR_TYPE_V4;
@@ -632,12 +645,12 @@ void start_network(){
 		vTaskDelay(1);
 
 		// retrieve the current ip
-		tcpip_adapter_ip_info_t sta_ip_info;
+		esp_netif_ip_info_t sta_ip_info;
 		sta_ip_info.ip.addr = 0;
-		while (sta_ip_info.ip.addr == 0)
-		{
-			tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &sta_ip_info);
-		}
+	//	while (sta_ip_info.ip.addr == 0)
+		//{
+			esp_netif_get_ip_info(sta, &sta_ip_info);
+		//}
 
 		const ip_addr_t *ipdns0 = dns_getserver(0);
 		printf("\nDNS: %s  \n",ip4addr_ntoa(( struct ip4_addr* ) &ipdns0));
@@ -645,7 +658,7 @@ void start_network(){
 
 		if (dhcpEn) // if dhcp enabled update fields
 		{
-			tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &info);
+			esp_netif_get_ip_info(sta, &info);
 			switch (g_device->current_ap)
 			{
 			case STA1: //ssid1 used
@@ -690,10 +703,10 @@ void start_network(){
 			}
 		}
 		saveDeviceSettings(g_device);
-		tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, "karadio32");
+		esp_netif_set_hostname(sta, "karadio32");
 	}
-	strcpy(localIp , ip4addr_ntoa(&info.ip));
-	printf("IP: %s\n\n",ip4addr_ntoa(&info.ip));
+	//strcpy(localIp , ip4addr_ntoa(&info.ip));
+	//printf("IP: %s\n\n",ip4addr_ntoa(&info.ip));
 	
 
 	lcd_welcome(localIp,"IP found");
