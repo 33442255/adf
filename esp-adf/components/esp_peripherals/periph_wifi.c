@@ -83,7 +83,7 @@ static esp_periph_handle_t g_periph = NULL;
 
 static QueueHandle_t s_event_queue = NULL;
 
-esp_periph_handle_t _self;
+static esp_periph_handle_t _self;
 
 QueueHandle_t esp_event_loop_get_queue(void)
 {
@@ -191,10 +191,7 @@ static void wifi_reconnect_timer(xTimerHandle tmr)
 static void event_handler(void* arg, esp_event_base_t event_base, 
                                 int32_t event_id, void* ctx)
 {
-	//esp_periph_handle_t self = (esp_periph_handle_t)ctx;
-	esp_periph_handle_t self = _self;
-	periph_wifi_handle_t periph_wifi = (periph_wifi_handle_t)esp_periph_get_data(self);
-
+	periph_wifi_handle_t periph_wifi = (periph_wifi_handle_t)esp_periph_get_data(_self);
 
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) 
 	{
@@ -206,7 +203,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
 		periph_wifi->wifi_state = PERIPH_WIFI_DISCONNECTED;
         xEventGroupClearBits(periph_wifi->state_event, CONNECTED_BIT);
         xEventGroupSetBits(periph_wifi->state_event, DISCONNECTED_BIT);
-        esp_periph_send_event(self, PERIPH_WIFI_DISCONNECTED, NULL, 0);
+        esp_periph_send_event(_self, PERIPH_WIFI_DISCONNECTED, NULL, 0);
         ESP_LOGW(TAG, "Wi-Fi disconnected from SSID %s, auto-reconnect %s, reconnect after %d ms",
                      periph_wifi->ssid,
                      periph_wifi->disable_auto_reconnect == 0 ? "enabled" : "disabled",
@@ -214,14 +211,14 @@ static void event_handler(void* arg, esp_event_base_t event_base,
         
 		if (!periph_wifi->disable_auto_reconnect) 
 		{
-			esp_periph_start_timer(self, periph_wifi->reconnect_timeout_ms / portTICK_RATE_MS, wifi_reconnect_timer);
+			esp_periph_start_timer(_self, periph_wifi->reconnect_timeout_ms / portTICK_RATE_MS, wifi_reconnect_timer);
 		}
 	} 
 	else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) 
 	{
         periph_wifi->wifi_state = PERIPH_WIFI_CONNECTED;
         xEventGroupClearBits(periph_wifi->state_event, DISCONNECTED_BIT);
-        esp_periph_send_event(self, PERIPH_WIFI_CONNECTED, NULL, 0);
+        esp_periph_send_event(_self, PERIPH_WIFI_CONNECTED, NULL, 0);
         xEventGroupSetBits(periph_wifi->state_event, CONNECTED_BIT);
         wifi_config_t w_config;
         memset(&w_config, 0x00, sizeof(wifi_config_t));
@@ -250,6 +247,7 @@ static esp_err_t _wifi_init(esp_periph_handle_t self)
     }
  
     esp_netif_init();
+
 
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 

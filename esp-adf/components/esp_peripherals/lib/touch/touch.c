@@ -31,9 +31,9 @@
 
 #include "esp_log.h"
 #include "driver/gpio.h"
-#include "driver/touch_pad.h"
 #include "sys/queue.h"
 #include "touch.h"
+#include "driver/touch_pad.h"
 
 
 #define TOUCHPAD_TRIGGER_THRESHOLD      100

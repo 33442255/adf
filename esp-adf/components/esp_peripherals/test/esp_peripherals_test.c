@@ -29,7 +29,7 @@
 #include "esp_log.h"
 #include "esp_err.h"
 #include "nvs_flash.h"
-#include "tcpip_adapter.h"
+#include "esp_netif.h"
 #include <pthread.h>
 #include "periph_sdcard.h"
 #include "periph_button.h"
@@ -141,7 +141,8 @@ TEST_CASE("Test all peripherals", "[esp-adf]")
     }
     ESP_ERROR_CHECK(err);
 
-    esp_netif_init();#if CONFIG_HEAP_TRACING
+    esp_netif_init();
+#if CONFIG_HEAP_TRACING
     heap_trace_stop();
     ESP_ERROR_CHECK(heap_trace_init_standalone(trace_record, NUM_RECORDS));
     ESP_ERROR_CHECK(heap_trace_start(HEAP_TRACE_LEAKS));

@@ -33,6 +33,8 @@
 #include "audio_event_iface.h"
 #include "audio_mutex.h"
 #include "esp_peripherals.h"
+#include "esp_intr_alloc.h"
+#include "driver/gpio.h"
 
 static const char *TAG = "ESP_PERIPH";
 
@@ -195,7 +197,7 @@ esp_err_t esp_periph_set_destroy(esp_periph_set_handle_t periph_set_handle)
     mutex_destroy(periph_set_handle->lock);
     vEventGroupDelete(periph_set_handle->state_event_bits);
 
-//    gpio_uninstall_isr_service();
+    //gpio_uninstall_isr_service();
     audio_event_iface_destroy(periph_set_handle->event_handle.iface);
     free(periph_set_handle);
     periph_set_handle = NULL;

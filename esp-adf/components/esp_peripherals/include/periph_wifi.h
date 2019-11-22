@@ -125,7 +125,6 @@ esp_err_t periph_wifi_config_start(esp_periph_handle_t periph, periph_wifi_confi
  */
 esp_err_t periph_wifi_config_wait_done(esp_periph_handle_t periph, TickType_t tick_to_wait);
 
-
 #ifdef __cplusplus
 }
 #endif

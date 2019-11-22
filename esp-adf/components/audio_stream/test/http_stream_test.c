@@ -182,6 +182,7 @@ TEST_CASE("http stream read", "[esp-adf-stream]")
         err = nvs_flash_init();
     }
     esp_netif_init();
+
     esp_periph_config_t periph_cfg = DEFAULT_ESP_PERIPH_SET_CONFIG();
     esp_periph_set_handle_t set = esp_periph_set_init(&periph_cfg);
     TEST_ASSERT_NOT_NULL(set);
@@ -274,6 +275,7 @@ TEST_CASE("http stream write", "[esp-adf-stream]")
         err = nvs_flash_init();
     }
     esp_netif_init();
+
     esp_periph_config_t periph_cfg = DEFAULT_ESP_PERIPH_SET_CONFIG();
     esp_periph_set_handle_t set = esp_periph_set_init(&periph_cfg);
     TEST_ASSERT_NOT_NULL(set);
@@ -362,6 +364,7 @@ TEST_CASE("http stream living test", "[esp-adf-stream]")
         err = nvs_flash_init();
     }
     esp_netif_init();
+
     audio_pipeline_handle_t pipeline;
     audio_element_handle_t http_stream_reader, i2s_stream_writer, aac_decoder;
 

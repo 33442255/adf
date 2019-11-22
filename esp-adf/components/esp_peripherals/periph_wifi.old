@@ -250,6 +250,7 @@ static esp_err_t _wifi_init(esp_periph_handle_t self)
  
     esp_netif_init();
 
+
     if (esp_event_loop_get_queue() == NULL) 
 	{
        ESP_ERROR_CHECK(esp_event_loop_init(_wifi_event_callback, self));   
