@@ -88,8 +88,8 @@ void app_main(void)
 
     ESP_LOGI(TAG, "[2.6] Set up  uri (http as http_stream, mp3 as mp3 decoder, and default output is i2s)");
 //    audio_element_set_uri(http_stream_reader, "https://dl.espressif.com/dl/audio/ff-16b-2c-44100hz.mp3");
-    //audio_element_set_uri(http_stream_reader, "http://icy.unitedradio.it/VirginRogerWaters.mp3");
-	audio_element_set_uri(http_stream_reader, "http://ic4.101.ru:8000/a161");
+    audio_element_set_uri(http_stream_reader, "http://icy.unitedradio.it/VirginRogerWaters.mp3");
+	//audio_element_set_uri(http_stream_reader, "http://ic4.101.ru:8000/a161");
 
 
     ESP_LOGI(TAG, "[ 3 ] Start and wait for Wi-Fi network");
@@ -107,8 +107,8 @@ void app_main(void)
 
     periph_wifi_wait_for_connected(wifi_handle, portMAX_DELAY);
   
-//    ESP_LOGI(TAG, "[3.1] Initialize keys on board");
-//    audio_board_key_init(set);
+    ESP_LOGI(TAG, "[3.1] Initialize keys on board");
+    audio_board_key_init(set);
 
     ESP_LOGI(TAG, "[ 4 ] Set up  event listener");
     audio_event_iface_cfg_t evt_cfg = AUDIO_EVENT_IFACE_DEFAULT_CFG();
@@ -149,7 +149,7 @@ void app_main(void)
             continue;
         }
 
-/*		if ((msg.source_type == PERIPH_ID_TOUCH || msg.source_type == PERIPH_ID_BUTTON || msg.source_type == PERIPH_ID_ADC_BTN)
+		if ((msg.source_type == PERIPH_ID_TOUCH || msg.source_type == PERIPH_ID_BUTTON || msg.source_type == PERIPH_ID_ADC_BTN)
         && (msg.cmd == PERIPH_TOUCH_TAP || msg.cmd == PERIPH_BUTTON_PRESSED || msg.cmd == PERIPH_ADC_BUTTON_PRESSED)) {
 
             if ((int) msg.data == get_input_play_id()) {
@@ -200,7 +200,7 @@ void app_main(void)
             continue;
 			}
 
-*/
+
 		/* Stop when the last pipeline element (i2s_stream_writer in this case) receives stop event */
         if (msg.source_type == AUDIO_ELEMENT_TYPE_ELEMENT && msg.source == (void *) i2s_stream_writer
             && msg.cmd == AEL_MSG_CMD_REPORT_STATUS
