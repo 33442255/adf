@@ -712,8 +712,7 @@ void start_network(){
 	strcpy(localIp , ip4addr_ntoa(&ipAddr));
 	printf("IP: %s\n\n", localIp);
 	
-
-	lcd_welcome(localIp,"IP found");
+	if (g_device->lcd_type != LCD_NONE)	lcd_welcome(localIp,"IP found");
 	vTaskDelay(10);
 
 }
@@ -951,9 +950,19 @@ void app_main()
 	uint8_t ddmm;
 	option_get_ddmm(&ddmm);	
 	setDdmm(ddmm?1:0);
-	
+
 	//SPI init for the vs1053 and lcd if spi.
-	Spi_init();
+	
+	uint8_t spi_no;
+	gpio_num_t miso;
+	gpio_num_t mosi;
+	gpio_num_t sclk;
+
+	gpio_get_spi_bus(&spi_no,&miso,&mosi,&sclk);	
+	if(miso != GPIO_NONE && mosi != GPIO_NONE && sclk != GPIO_NONE && spi_no > 0 && spi_no < 3) 
+	{
+		Spi_init();
+	}
 
 	// output mode
 	//I2S, I2S_MERUS, DAC_BUILT_IN, PDM, VS1053, A1S
@@ -973,6 +982,7 @@ void app_main()
 	ESP_LOGI(TAG,"LCD Type %d",g_device->lcd_type);
 	//lcd rotation
 	setRotat(rt) ;	
+	
 	lcd_init(g_device->lcd_type);
 	
 
@@ -1005,15 +1015,16 @@ void app_main()
 		g_device->uartspeed = uspeed;
 		saveDeviceSettings(g_device);
 	}	
-	
-
 	// Version infos
 	ESP_LOGI(TAG, "Release %s, Revision %s",RELEASE,REVISION);
 	ESP_LOGI(TAG, "SDK %s",esp_get_idf_version());
 	ESP_LOGI(TAG, "Heap size: %d",xPortGetFreeHeapSize());
 
-	lcd_welcome("","");
-	lcd_welcome("","STARTING");
+	if (g_device->lcd_type != LCD_NONE)
+	{
+		lcd_welcome("","");
+		lcd_welcome("","STARTING");
+	}
 	
 	// volume
 	setIvol( g_device->vol);
@@ -1027,16 +1038,16 @@ void app_main()
 	ESP_LOGI(TAG, "%s task: %x","t0",(unsigned int)pxCreatedTask);		
 	
 	
-//-----------------------------
-// start the network
-//-----------------------------
-    /* init wifi & network*/
-    start_wifi();
-	start_network();
-	
-//-----------------------------------------------------
-//init softwares
-//-----------------------------------------------------
+	//-----------------------------
+	// start the network
+	//-----------------------------
+		/* init wifi & network*/
+		start_wifi();
+		start_network();
+		
+	//-----------------------------------------------------
+	//init softwares
+	//-----------------------------------------------------
 
 	clientInit();	
 	//initialize mDNS service
@@ -1072,7 +1083,7 @@ void app_main()
 	renderer_init(create_renderer_config());
 	
 	// LCD Display infos
-    lcd_welcome(localIp,"STARTED");
+ 	if (g_device->lcd_type != LCD_NONE)  lcd_welcome(localIp,"STARTED");
 	vTaskDelay(10);
     ESP_LOGI(TAG, "RAM left %d", esp_get_free_heap_size());
 
@@ -1108,4 +1119,6 @@ void app_main()
 	//autostart		
 	autoPlay();
 // All done.
+
+	
 }

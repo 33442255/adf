@@ -71,8 +71,12 @@ void Spi_init(){
 	if(!hsSPI) hsSPI=xSemaphoreCreateMutex();;
 	
 	gpio_get_spi_bus(&spi_no,&miso,&mosi,&sclk);	
-	if(spi_no > 2) return; //Only VSPI and HSPI are valid spi modules. 	
-
+	if(miso == GPIO_NONE || mosi == GPIO_NONE || sclk == GPIO_NONE || spi_no > 2) 
+	{
+		ESP_LOGE("SPI","SPI pin not configured");
+		return; //Only VSPI and HSPI are valid spi modules. 	
+	}
+	
 	spi_bus_config_t buscfg={
         .miso_io_num=miso,
         .mosi_io_num=mosi,

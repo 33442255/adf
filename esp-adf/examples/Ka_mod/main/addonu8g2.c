@@ -489,8 +489,10 @@ void namesetU8g2(char* ici)
        nameNum[ici - nameset+1] = 0; 
 	   setFuturNum(atoi(nameNum));     
     }
-    strcpy(nameset,nameset+strlen(nameNum));
-    lline[STATIONNAME] = nameset;
+
+	char buff[BUFLEN];
+    strcpy(buff,nameset+strlen(nameNum));
+    lline[STATIONNAME] = buff;
 }
 
 // cli.playing
@@ -526,6 +528,12 @@ void lcd_initU8g2(uint8_t *lcd_type)
 	if (*lcd_type & LCD_SPI) // BW SPI
 	{
 		gpio_get_spi_bus(&spi_no,&miso,&mosi,&sclk);
+		if(miso == GPIO_NONE || mosi == GPIO_NONE || sclk == GPIO_NONE || spi_no > 2) 
+		{
+			ESP_LOGE("SPI","SPI pin not configured");
+			return;  	
+		}
+
 		gpio_get_spi_lcd(&cs ,&a0,&rstlcd);
 		u8g2_esp32_hal.spi_no   = spi_no;
 		u8g2_esp32_hal.clk   = sclk;
@@ -536,6 +544,12 @@ void lcd_initU8g2(uint8_t *lcd_type)
 	} else //BW I2C
 	{
 		gpio_get_i2c(&scl,&sda,&rsti2c);
+		if(scl == GPIO_NONE || sda == GPIO_NONE) 
+		{
+			ESP_LOGE("I2C","I2C pin not configured");
+			return;  	
+		}
+
 		u8g2_esp32_hal.sda  = sda;
 		u8g2_esp32_hal.scl  = scl;
 		u8g2_esp32_hal.reset = rsti2c;

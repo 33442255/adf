@@ -846,10 +846,11 @@ void namesetUcg(char* ici)
        nameNum[ici - nameset+1] = 0; 
 	   setFuturNum(atoi(nameNum));     
     }
-    strcpy(nameset,nameset+strlen(nameNum));
+	char buff[BUFLEN];
+    strcpy(buff,nameset+strlen(nameNum));
 	charset = Latin;
-	removeUtf8(nameset);
-    lline[STATIONNAME] = nameset;
+	removeUtf8(buff);
+    lline[STATIONNAME] = buff;
 	markDrawResetUcg(STATIONNAME);
 
 }
@@ -895,7 +896,19 @@ void lcd_initUcg(uint8_t *lcd_type)
 	if (*lcd_type & LCD_SPI) // Color SPI
 	{
 		gpio_get_spi_bus(&spi_no,&miso,&mosi,&sclk);
+		if(miso == GPIO_NONE || mosi == GPIO_NONE || sclk == GPIO_NONE || spi_no > 2) 
+		{
+			ESP_LOGE("SPI","SPI pin not configured");
+			return; 	
+		}
+
 		gpio_get_spi_lcd(&cs ,&a0,&rstlcd);
+		if(cs == GPIO_NONE || a0 == GPIO_NONE) 
+		{
+			ESP_LOGE("LCD","LCD pin not configured");
+			return;  	
+		}
+
 		ucg_esp32_hal.spi_no   = spi_no;
 		ucg_esp32_hal.clk   = sclk;
 		ucg_esp32_hal.mosi  = mosi;
@@ -905,6 +918,13 @@ void lcd_initUcg(uint8_t *lcd_type)
 	} else //Color I2c (never seen this one)
 	{
 		gpio_get_i2c(&scl,&sda,&rsti2c);
+		if(scl == GPIO_NONE || sda == GPIO_NONE) 
+		{
+			ESP_LOGE("I2C","I2C pin not configured");
+			return;  	
+		}
+
+
 		ucg_esp32_hal.sda  = sda;
 		ucg_esp32_hal.scl  = scl;
 		ucg_esp32_hal.reset = rsti2c;

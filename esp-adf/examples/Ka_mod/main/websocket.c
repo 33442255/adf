@@ -101,7 +101,7 @@ uint32_t decodeHttpMessage (char * inputMessage, char * outputMessage)
 		index ++;
 	}
 		//It's a websocket request
-	for (index = 1; index < 12; index++)
+	for (index = 1; index < 16; index++)
 	{
 		if (strncmp(tokens[index], "Sec-WebSocket-Key: ", 19) == 0)
 		{
@@ -269,6 +269,8 @@ void websocketparsedata(int socket, char* buf, int len)
 	return;
 	}
 	
+	header.maskKey = 0;
+
     if(header.mask) {
 	    headerLen += 4;	
 		while(headerLen > recbytes) recbytes += read(socket , buf+recbytes, MAXDATA-recbytes);
