@@ -379,14 +379,6 @@ void VS1053_Start(){
 		}
 	}
 	vTaskDelay(5);
-	ESP_LOGI(TAG,"volume: %d",g_device->vol);
-	setIvol( g_device->vol);
-	VS1053_SetVolume( g_device->vol);	
-	VS1053_SetTreble(g_device->treble);
-	VS1053_SetBass(g_device->bass);
-	VS1053_SetTrebleFreq(g_device->freqtreble);
-	VS1053_SetBassFreq(g_device->freqbass);
-	VS1053_SetSpatial(g_device->spacial);
 }
 
 int VS1053_SendMusicBytes(uint8_t* music, uint16_t quantity){
@@ -661,6 +653,15 @@ void vsTask(void *pvParams) {
 	portBASE_TYPE uxHighWaterMark;
 	uint8_t  b[VSTASKBUF];
 	uint16_t size ,s;
+
+	ESP_LOGI(TAG,"volume: %d",g_device->vol);
+	setIvol( g_device->vol);
+	VS1053_SetVolume( g_device->vol);	
+	VS1053_SetTreble(g_device->treble);
+	VS1053_SetBass(g_device->bass);
+	VS1053_SetTrebleFreq(g_device->freqtreble);
+	VS1053_SetBassFreq(g_device->freqbass);
+	VS1053_SetSpatial(g_device->spacial);
 
 	player_t *player = pvParams;
 	

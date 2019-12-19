@@ -957,13 +957,26 @@ void app_main()
 	gpio_num_t miso;
 	gpio_num_t mosi;
 	gpio_num_t sclk;
+	gpio_num_t sda;
+	gpio_num_t scl;
+	gpio_num_t rsti2c;
+
+	uint8_t rt;
+	option_get_lcd_info(&g_device->lcd_type,&rt);
 
 	gpio_get_spi_bus(&spi_no,&miso,&mosi,&sclk);	
 	if(miso != GPIO_NONE && mosi != GPIO_NONE && sclk != GPIO_NONE && spi_no > 0 && spi_no < 3) 
 	{
 		Spi_init();
 	}
-
+	else
+	{
+		gpio_get_i2c(&scl,&sda,&rsti2c);
+		if(scl == GPIO_NONE || sda == GPIO_NONE) 
+		{
+			g_device->lcd_type = LCD_NONE;
+		}	
+	}
 	// output mode
 	//I2S, I2S_MERUS, DAC_BUILT_IN, PDM, VS1053, A1S
 	audio_output_mode = g_device->audio_output_mode;
@@ -977,8 +990,6 @@ void app_main()
 	//ESP_LOGE(TAG,"Corrupt1 %d",heap_caps_check_integrity(MALLOC_CAP_DMA,1));
 	
 	// lcd init
-	uint8_t rt;
-	option_get_lcd_info(&g_device->lcd_type,&rt);
 	ESP_LOGI(TAG,"LCD Type %d",g_device->lcd_type);
 	//lcd rotation
 	setRotat(rt) ;	

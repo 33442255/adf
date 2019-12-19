@@ -512,6 +512,7 @@ AAC_DECODER_ERROR CAacDecoder_ExtPayloadParse (HANDLE_AACDECODER self,
 
   case EXT_SBR_DATA_CRC:
     crcFlag = 1;
+    /*fall through*/
   case EXT_SBR_DATA:
     if (IS_CHANNEL_ELEMENT(previous_element)) {
       SBR_ERROR sbrError;
@@ -653,8 +654,7 @@ AAC_DECODER_ERROR CAacDecoder_ExtPayloadParse (HANDLE_AACDECODER self,
       }
       /* Note: the fall through in case the if statement above is not taken is intentional. */
       break;
-    }
-
+    }/*fall through*/
   case EXT_FIL:
 
   default:
@@ -834,13 +834,13 @@ LINKSPEC_CPP AAC_DECODER_ERROR CAacDecoder_Init(HANDLE_AACDECODER self, const CS
   switch (asc->m_aot) {
   case AOT_AAC_LC:
     self->streamInfo.profile = 1;
-
+    /*fall through*/
   case AOT_ER_AAC_SCAL:
     if (asc->m_sc.m_gaSpecificConfig.m_layer > 0) {
       /* aac_scalable_extension_element() currently not supported. */
       return AAC_DEC_UNSUPPORTED_FORMAT;
     }
-
+    /*fall through*/
   case AOT_SBR:
   case AOT_PS:
   case AOT_ER_AAC_LD:
