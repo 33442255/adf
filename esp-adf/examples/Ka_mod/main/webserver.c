@@ -97,10 +97,11 @@ static void respKo(int conn)
 static void serveFile(char* name, int conn)
 {
 #define PART 1460
-	int length;
+	int length = 0;
 	int progress,part,gpart;
-	char buf[150];
+	char buf[270] = "HTTP/1.1 404 File not found\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 158\r\n\r\n<!DOCTYPE html><html><head><title>404 Not Found</title></head><body><h1>Not Found</h1><p>The requested URL was not found on this server.</p></body></html>\r\n";	
 	char *content;
+	
 	if (strcmp(name,"/style.css") == 0)
 	{
 			if (g_device->options & T_THEME) strcpy(name , "/style1.css");
@@ -116,7 +117,7 @@ static void serveFile(char* name, int conn)
 		content = (char*)f->content;
 		progress = 0;
 	}
-	else length = 0;
+
 	if(length > 0)
 	{
 		if (xSemaphoreTake(semfile,portMAX_DELAY ))
@@ -436,13 +437,19 @@ static void handlePOST(char* name, char* data, int data_size, int conn) {
 		}
 	} else if(strcmp(name, "/soundvol") == 0) {
 		if(data_size > 0) {
-			char * vol = data+4;
-			data[data_size-1] = 0;
-			ESP_LOGD(TAG,"/sounvol vol: %s num:%d",vol, atoi(vol));
-			setVolume(vol); 
-			respOk(conn,NULL);
-			return;
+			char param[4];
+			int vol;
+			if(getSParameterFromResponse(param,4,"vol=", data, data_size)) {
+				if(param == NULL) { return; }
+				vol = atoi(param);
+				if(vol < 0 || vol > 254) { return; }
+				ESP_LOGD(TAG,"/sounvol vol: %s num:%d", param, vol);
+				setVolume(param); // setVolume waits for a string
+				wsVol(param);
+				respOk(conn,NULL);
+			}
 		}
+		return;
 	} else if(strcmp(name, "/sound") == 0) {
 		if(data_size > 0) {
 			char bass[6];
