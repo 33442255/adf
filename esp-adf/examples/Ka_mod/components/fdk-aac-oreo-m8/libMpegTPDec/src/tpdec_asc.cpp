@@ -1423,7 +1423,7 @@ TRANSPORTDEC_ERROR DrmRawSdcAudioConfig_Parse(
        - coder field         5 bits
        - rfa                 1 bit  */
 
-    int audioCoding, audioMode, cSamplingFreq, coderField, sfIdx, sbrFlag;
+    int audioCoding, audioMode, cSamplingFreq, sfIdx, sbrFlag;
 
     /* Read the SDC field */
     FDKreadBits(bs,4);   /* Short and Stream Id */
@@ -1434,7 +1434,7 @@ TRANSPORTDEC_ERROR DrmRawSdcAudioConfig_Parse(
     cSamplingFreq = FDKreadBits(bs, 3);    /* audio sampling rate */
 
     FDKreadBits(bs, 2);  /* Text and enhancement flag */
-    coderField   = FDKreadBits(bs, 5);
+    FDKreadBits(bs, 5);
     FDKreadBits(bs, 1);  /* rfa */
 
     /* Evaluate configuration and fill the ASC */

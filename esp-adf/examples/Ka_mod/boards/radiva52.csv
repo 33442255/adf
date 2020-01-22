@@ -1,8 +1,8 @@
 key,type,encoding,value
 
 label_space,namespace,,
-L_LABEL,data,string,radiva51.csv
-L_COMMENT,data,string,xcs:15 xdcs:2 rst:12 dreq:4 a/d:14 cs:13 d_rst:32 ir:36 lcd:194 led:22 bl:27
+L_LABEL,data,string,radiva52.csv
+L_COMMENT,data,string,xcs:15 xdcs:2 rst:12 dreq:4 a/d:14 d_cs:13 d_rst:32 ir:36 lcd:194 led:22 bl:27 t_cs:21 miso:19 mosi:23 sck:18 disp:194
 
 gpio_space,namespace,,
 K_SPI,data,u8,2
@@ -35,7 +35,7 @@ P_IR_SIGNAL,data,u8,36
 P_I2S_LRCK,data,u8,255
 P_I2S_BCLK,data,u8,255
 P_I2S_DATA,data,u8,255
-P_TOUCH_CS,data,u8,255
+P_TOUCH_CS,data,u8,21
 P_JOY_0,data,u8,255
 P_JOY_1,data,u8,255
 P_LED_GPIO,data,u8,22

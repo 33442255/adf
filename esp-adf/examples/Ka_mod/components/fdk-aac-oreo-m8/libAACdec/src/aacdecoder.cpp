@@ -372,13 +372,14 @@ static AAC_DECODER_ERROR CDataStreamElement_Read (
   }
 
   {
-    PCMDMX_ERROR dmxErr = PCMDMX_OK;
-
+    
     /* Move to the beginning of the data junk */
     FDKpushBack(bs, dataStart-FDKgetValidBits(bs));
 
     /* Read DMX meta-data */
-    dmxErr = pcmDmx_Parse (
+	//PCMDMX_ERROR dmxErr = PCMDMX_OK;
+
+	pcmDmx_Parse (
                      self->hPcmUtils,
                      bs,
                      dseBits,
