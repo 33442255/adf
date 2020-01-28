@@ -346,11 +346,27 @@ void VS1053_Start(){
 	VS1053_WriteRegister16(SPI_WRAM, 0x0000); //GPIO_ODATA=0
 	vTaskDelay(150);
 	
-	int MP3Status = VS1053_ReadRegister(SPI_STATUSVS);
-	vsVersion = (MP3Status >> 4) & 0x000F; //Mask out only the four version bits
+	//int MP3Status = VS1053_ReadRegister(SPI_STATUSVS);
+	//vsVersion = (MP3Status >> 4) & 0x000F; //Mask out only the four version bits
 //0 for VS1001, 1 for VS1011, 2 for VS1002, 3 for VS1003, 4 for VS1053 and VS8053,
 //5 for VS1033, 7 for VS1103, and 6 for VS1063	
-	ESP_LOGI(TAG,"VS1053/VS1003 detected. MP3Status: %x, Version: %x",MP3Status,vsVersion);
+	int MP3Status = 0, cnt = 0;
+	while (vsVersion == -1 && cnt < 200)
+	{
+		MP3Status = VS1053_ReadRegister(SPI_STATUSVS);
+		vsVersion = (MP3Status >> 4) & 0x000F; //Mask out only the four version bits
+											   //0 for VS1001, 1 for VS1011, 2 for VS1002, 3 for VS1003, 4 for VS1053 and VS8053,
+											   //5 for VS1033, 7 for VS1103, and 6 for VS1063
+		if (vsVersion == 0)
+		{
+			ESP_LOGE(TAG, "VS1053 vsVersion %d", vsVersion);
+			vsVersion = -1;
+			VS1053_SoftwareReset();
+		}
+		cnt++;	
+	}
+
+   if (vsVersion > 0 )ESP_LOGI(TAG,"VS1053/VS1003 detected. MP3Status: %x, Version: %x",MP3Status,vsVersion);
    if (vsVersion == 4) // only 1053b  	
 //		VS1053_WriteRegister(SPI_CLOCKF,0x78,0x00); // SC_MULT = x3, SC_ADD= x2
 		VS1053_WriteRegister16(SPI_CLOCKF,0xB800); // SC_MULT = x1, SC_ADD= x1
@@ -358,7 +374,8 @@ void VS1053_Start(){
 	else	
 		VS1053_WriteRegister16(SPI_CLOCKF,0xB000);
 	
-	VS1053_SoftwareReset();
+	
+//	VS1053_SoftwareReset();
 	while(VS1053_checkDREQ() == 0)taskYIELD ();
 	
 	VS1053_regtest();

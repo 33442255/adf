@@ -193,6 +193,7 @@ void setfont(sizefont size)
 		{
 			case 320:
 			ucg_SetFont(&ucg,ucg_font_inr53_mf); 
+			ucg_SetFont(&ucg,ucg_font_freedoomr25_tn);
 			break;
 			case 128:
 			ucg_SetFont(&ucg,ucg_font_helvR12_hf); 
@@ -689,44 +690,40 @@ static  void drawSecond(unsigned timein)
 
 void drawTimeUcg(uint8_t mTscreen,unsigned timein)
 {
-  char strdate[36];
-  char strtime[20];
-    sprintf(strtime,"%02d:%02d", dt->tm_hour, dt->tm_min);
-    switch (mTscreen){
-      case 1:
+char strdate[36];
+char strtime[20];
+sprintf(strtime,"%02d:%02d", dt->tm_hour, dt->tm_min);
+
+ucg_SetFontMode(&ucg,UCG_FONT_MODE_SOLID); 
+switch (mTscreen){
+    case 1:
 		setfont(text);
 		sprintf(strdate,"IP: %s", getIp());
 		ucg_ClearScreen(&ucg);
-        ucg_SetColor(&ucg,0,CRED);  
+		ucg_SetColor(&ucg,0,CRED);  
 		TTitleStr[0] = 0;
 		TTimeStr[0] = 0;
-//        ucg_SetColor(&ucg,0,CBLACK);  
-//        ucg_DrawBox(&ucg,0,HHeader,x,yy);     		
-        // draw ip
-        //ucg_SetFont(&ucg,ucg_font_6x13_tf);
-        ucg_DrawString(&ucg,4,yy-18,0,strdate);		
+		//ucg_SetFont(&ucg,ucg_font_6x13_tf);
+		ucg_DrawString(&ucg,4,yy-18,0,strdate);		
 		/* fall through */
-      case 2:
-	    if (getDdmm())
-			sprintf(strdate,"%02d-%02d-%04d", dt->tm_mday, dt->tm_mon+1,  dt->tm_year+1900);
-	    else
-			sprintf(strdate,"%02d-%02d-%04d", dt->tm_mon+1, dt->tm_mday, dt->tm_year+1900);
+    case 2:
+		if (getDdmm()) sprintf(strdate,"%02d-%02d-%04d", dt->tm_mday, dt->tm_mon+1,  dt->tm_year+1900);
+		else sprintf(strdate,"%02d-%02d-%04d", dt->tm_mon+1, dt->tm_mday, dt->tm_year+1900);
 		drawTTitleUcg(strdate);
 		if (strcmp(TTimeStr,strtime)!= 0)
-		{	
-			//ucg_SetFont(&ucg,ucg_font_inr38_mf); 
-			setfont(large);
-			ucg_SetColor(&ucg,0,CBODY);		
-			ucg_SetFontMode(&ucg,UCG_FONT_MODE_SOLID); 
-			ucg_DrawString(&ucg,(x/2)-(ucg_GetStrWidth(&ucg,strtime)/2),yy/3,0,strtime); 
-			strcpy(TTimeStr,strtime);
-			ucg_SetFontMode(&ucg,UCG_FONT_MODE_TRANSPARENT);
-		}
-
+			{	
+			//  ucg_SetFont(&ucg,ucg_font_inr38_mf); 
+				ucg_SetFont(&ucg,ucg_font_osb41_tn);
+			//	setfont(large);
+				ucg_SetColor(&ucg,0,CBODY);		
+				ucg_DrawString(&ucg,(x/2)-(ucg_GetStrWidth(&ucg,strtime)/2),yy/3,0,strtime); 
+				strcpy(TTimeStr,strtime);
+			}
 		break;
-      default:;
+    default:;
     }
 	drawSecond(timein);;     	
+	ucg_SetFontMode(&ucg,UCG_FONT_MODE_TRANSPARENT);
 }
 
 
