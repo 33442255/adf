@@ -12,6 +12,7 @@
 #include "lwip/sockets.h"
 #include "cencode_inc.h"
 #include "websocket.h"
+#include "esp_websocket_client.h"
 #include "interface.h"
 #include "webserver.h"
 #include "cencode_inc.h"
@@ -84,9 +85,9 @@ void websocketinit(void)
 uint32_t decodeHttpMessage (char * inputMessage, char * outputMessage)
 {
 	const char str1[98] = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ";
-	const char s[3] = "\r\n";
-//	const char str2[5] = "\r\n\r\n";
-	char *tokens[12];
+	const char s[3] = "\r\n"; //hash
+//	const char str2[5] = "\r\n\r\n"; //
+	char *tokens[20];
 	uint32_t index = 1;
 //remove	uint32_t i;
 	char key [24+36+1]; //24 bytes
@@ -95,13 +96,13 @@ uint32_t decodeHttpMessage (char * inputMessage, char * outputMessage)
 	uint32_t encodedLength;
 	//Split the message into substrings to identify it
 	tokens[0] = strtok(inputMessage, s);
-	while( (tokens[index-1] != NULL)&& (index < 12) )
+	while( (tokens[index-1] != NULL)&& (index < 20) )
 	{
 		tokens[index] = strtok(NULL, s);
 		index ++;
 	}
-		//It's a websocket request
-	for (index = 1; index < 16; index++)
+	//It's a websocket request
+	for (index = 1; index < 20; index++)
 	{
 		if (strncmp(tokens[index], "Sec-WebSocket-Key: ", 19) == 0)
 		{
