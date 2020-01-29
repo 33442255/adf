@@ -24,7 +24,6 @@
 
 #include "esp_log.h"
 
-
 #include <string.h>
 #include "audio_error.h"
 #include "pin_conf.h"
@@ -36,18 +35,21 @@ static const char *TAG = "A1S";
 
 esp_err_t get_i2c_pins(i2c_port_t port, i2c_config_t *i2c_config)
 {
-	gpio_num_t scl;
-	gpio_num_t sda;
-	gpio_num_t rsti2c;
+    gpio_num_t scl;
+    gpio_num_t sda;
+    gpio_num_t rsti2c;
 
-	gpio_get_i2c(&scl,&sda,&rsti2c);
+    gpio_get_i2c(&scl, &sda, &rsti2c);
 
-	AUDIO_NULL_CHECK(TAG, i2c_config, return ESP_FAIL);
-    if (port == I2C_NUM_0) {
+    AUDIO_NULL_CHECK(TAG, i2c_config, return ESP_FAIL);
+    if (port == I2C_NUM_0)
+    {
         i2c_config->sda_io_num = sda;
         i2c_config->scl_io_num = scl;
         ESP_LOGI(TAG, "i2c port configured!!!!");
-    } else {
+    }
+    else
+    {
         i2c_config->sda_io_num = GPIO_NONE;
         i2c_config->scl_io_num = GPIO_NONE;
         ESP_LOGE(TAG, "i2c port %d is not supported", port);
@@ -58,20 +60,23 @@ esp_err_t get_i2c_pins(i2c_port_t port, i2c_config_t *i2c_config)
 
 esp_err_t get_i2s_pins(i2s_port_t port, i2s_pin_config_t *i2s_config)
 {
-	gpio_num_t bclk;
-	gpio_num_t lrck;
-	gpio_num_t i2sdata;
+    gpio_num_t bclk;
+    gpio_num_t lrck;
+    gpio_num_t i2sdata;
 
-	gpio_get_i2s(&lrck ,&bclk ,&i2sdata );
+    gpio_get_i2s(&lrck, &bclk, &i2sdata);
 
-	AUDIO_NULL_CHECK(TAG, i2s_config, return ESP_FAIL);
-    if (port == I2S_NUM_0) {
+    AUDIO_NULL_CHECK(TAG, i2s_config, return ESP_FAIL);
+    if (port == I2S_NUM_0)
+    {
         i2s_config->bck_io_num = bclk;
         i2s_config->ws_io_num = lrck;
         i2s_config->data_out_num = i2sdata;
         i2s_config->data_in_num = I2S_PIN_NO_CHANGE; //GPIO_NUM_35
         ESP_LOGI(TAG, "i2s port configured!!!!");
-    } else {
+    }
+    else
+    {
         memset(i2s_config, GPIO_NONE, sizeof(i2s_pin_config_t));
         ESP_LOGE(TAG, "i2s port %d is not supported", port);
         return ESP_FAIL;
@@ -91,4 +96,3 @@ int8_t get_pa_enable_gpio(void)
 {
     return PA_ENABLE_GPIO;
 }
-

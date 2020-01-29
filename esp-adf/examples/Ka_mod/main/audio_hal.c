@@ -31,32 +31,33 @@ static const char *TAG = "AUDIO_HAL";
 
 void *audio_calloc(size_t nmemb, size_t size)
 {
-	void *data =  NULL;
-	if (xPortGetFreeHeapSize() > 0x80000)
-	{
-		data = heap_caps_malloc(nmemb * size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-		if (data)
-		{
-			memset(data, 0, nmemb * size);
-		}
-	}
-	else
-	{
-		data = calloc(nmemb, size);
-	}
-	return data;
+    void *data = NULL;
+    if (xPortGetFreeHeapSize() > 0x80000)
+    {
+        data = heap_caps_malloc(nmemb * size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+        if (data)
+        {
+            memset(data, 0, nmemb * size);
+        }
+    }
+    else
+    {
+        data = calloc(nmemb, size);
+    }
+    return data;
 }
 
 #define AUDIO_HAL_CHECK_NULL(a, format, b, ...) \
-    if ((a) == 0) { \
-        ESP_LOGE(TAG, format, ##__VA_ARGS__); \
-        return b;\
+    if ((a) == 0)                               \
+    {                                           \
+        ESP_LOGE(TAG, format, ##__VA_ARGS__);   \
+        return b;                               \
     }
 
 audio_hal_handle_t audio_hal_init(audio_hal_codec_config_t *audio_hal_conf, audio_hal_func_t *audio_hal_func)
 {
     esp_err_t ret = 0;
-    audio_hal_handle_t audio_hal = (audio_hal_handle_t) audio_calloc(1, sizeof(audio_hal_func_t));
+    audio_hal_handle_t audio_hal = (audio_hal_handle_t)audio_calloc(1, sizeof(audio_hal_func_t));
     AUDIO_MEM_CHECK(TAG, audio_hal, return NULL);
     memcpy(audio_hal, audio_hal_func, sizeof(audio_hal_func_t));
     audio_hal->audio_hal_lock = mutex_create();
@@ -66,12 +67,16 @@ audio_hal_handle_t audio_hal_init(audio_hal_codec_config_t *audio_hal_conf, audi
         return NULL;
     });
     mutex_lock(audio_hal->audio_hal_lock);
-    ret  = audio_hal->audio_codec_initialize(audio_hal_conf);
-    if (ret == ESP_FAIL) {
+    ret = audio_hal->audio_codec_initialize(audio_hal_conf);
+    if (ret == ESP_FAIL)
+    {
         free(audio_hal);
-        if (audio_hal_func->handle) {
+        if (audio_hal_func->handle)
+        {
             return audio_hal_func->handle;
-        } else {
+        }
+        else
+        {
             ESP_LOGE(TAG, "codec init failed!");
             return NULL;
         }

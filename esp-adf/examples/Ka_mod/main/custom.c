@@ -11,9 +11,9 @@
 
 //#define gpioLedBacklight 5
 gpio_num_t lcdb;
-// LedBacklight control a gpio to switch on or off the lcd backlight 
+// LedBacklight control a gpio to switch on or off the lcd backlight
 // in addition of the sys.lcdout("x")  configuration for system with battries.
-// added by Vadim Polyakovsky 
+// added by Vadim Polyakovsky
 // Schematic on the KaRadio facebook group:
 // https://www.facebook.com/photo.php?fbid=1971836752872801&set=p.1971836752872801&type=3&ifg=1
 void LedBacklightInit()
@@ -22,18 +22,18 @@ void LedBacklightInit()
 	if (lcdb != GPIO_NONE)
 	{
 		gpio_output_conf(lcdb);
-		gpio_set_level(lcdb,1);
+		gpio_set_level(lcdb, 1);
 	}
-}	 
- 
-void LedBacklightOn() 
+}
+
+void LedBacklightOn()
 {
 	if (lcdb != GPIO_NONE)
-		gpio_set_level(lcdb,1);
-}	 
- 
-void  LedBacklightOff() 
+		gpio_set_level(lcdb, 1);
+}
+
+void LedBacklightOff()
 {
 	if (lcdb != GPIO_NONE)
-		gpio_set_level(lcdb,0);
-}	 
+		gpio_set_level(lcdb, 0);
+}
