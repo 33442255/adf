@@ -1,8 +1,3 @@
-/******************************************************************************
- * 
- * Copyright 2017 karawin (http://www.karawin.fr)
- *
-*******************************************************************************/
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -55,30 +50,29 @@ bool eeSetData(int address, void *buffer, int size)
 	{
 		while (1)
 		{
-
 			uint32_t sector = address & 0xFFF000;
 			uint8_t *eebuf8 = (uint8_t *)eebuf;
 			uint16_t startaddr = address & 0xFFF;
 			uint16_t maxsize = 4096 - startaddr;
-			//printf("set1 startaddr: %x, size:%x, maxsize: %x, sector: %x, eebuf: %x\n",startaddr,size,maxsize,(int)sector,(int)eebuf);
-			//spi_flash_read(sector, (uint32_t *)eebuf, 4096);
+			// printf("set1 startaddr: %x, size:%x, maxsize: %x, sector: %x, eebuf: %x\n",startaddr,size,maxsize,(int)sector,(int)eebuf);
+			// spi_flash_read(sector, (uint32_t *)eebuf, 4096);
 			ESP_ERROR_CHECK(esp_partition_read(STATIONS, sector, eebuf, 4096));
 			vTaskDelay(1);
 			ESP_ERROR_CHECK(esp_partition_erase_range(STATIONS, sector, 4096));
-			//spi_flash_erase_sector(sector >> 12);
+			// spi_flash_erase_sector(sector >> 12);
 
-			//printf("set2 startaddr: %x, size:%x, maxsize: %x, sector: %x, eebuf: %x\n",startaddr,size,maxsize,(int)sector,(int)eebuf);
+			// printf("set2 startaddr: %x, size:%x, maxsize: %x, sector: %x, eebuf: %x\n",startaddr,size,maxsize,(int)sector,(int)eebuf);
 			for (i = 0; (i < size && i < maxsize); i++)
 				eebuf8[i + startaddr] = inbuf[i];
 			ESP_ERROR_CHECK(esp_partition_write(STATIONS, sector, eebuf, 4096));
-			//spi_flash_write(sector, (uint32_t *)eebuf, 4096);
-			//printf("set3 startaddr: %x, size:%x, maxsize: %x, result:%x, sector: %x, eebuf: %x\n",startaddr,size,maxsize,result,sector,eebuf);
+			// spi_flash_write(sector, (uint32_t *)eebuf, 4096);
+			// printf("set3 startaddr: %x, size:%x, maxsize: %x, result:%x, sector: %x, eebuf: %x\n",startaddr,size,maxsize,result,sector,eebuf);
 			if (maxsize >= size)
 				break;
 			address += i;
 			inbuf += i;
 			size -= i;
-			//printf("set2 startaddr: %x, size:%x, maxsize: %x, sector: %x, eebuf: %x\n",startaddr,size,maxsize,sector,eebuf);
+			// printf("set2 startaddr: %x, size:%x, maxsize: %x, sector: %x, eebuf: %x\n",startaddr,size,maxsize,sector,eebuf);
 		}
 		free(eebuf);
 	}
@@ -110,7 +104,7 @@ void eeEraseAll()
 		ESP_ERROR_CHECK(esp_partition_write(DEVICE1, 0, buffer, 4096)); // clear device1
 		for (i = 0; i < 16; i++)
 		{
-			//	printf("erase from %x \n",4096*i);
+			// printf("erase from %x \n",4096*i);
 			ESP_ERROR_CHECK(esp_partition_write(STATIONS, 4096 * i, buffer, 4096)); // clear stations
 																					// eeSetClear(4096*i,buffer);
 			vTaskDelay(1);															// avoid watchdog
@@ -128,7 +122,7 @@ void eeErasesettings(void)
 	uint8_t *buffer = malloc(4096);
 	for (i = 0; i < 4096; i++)
 		buffer[i] = 0;
-	ESP_ERROR_CHECK(esp_partition_write(DEVICE, 0, buffer, 4096)); // clear device
+	ESP_ERROR_CHECK(esp_partition_write(DEVICE, 0, buffer, 4096)); //clear device
 	free(buffer);
 }
 
@@ -177,6 +171,7 @@ void saveStation(struct shoutcast_info *station, uint16_t position)
 			return;
 	}
 }
+
 void saveMultiStation(struct shoutcast_info *station, uint16_t position, uint8_t number)
 {
 	uint32_t i = 0;
@@ -191,7 +186,7 @@ void saveMultiStation(struct shoutcast_info *station, uint16_t position, uint8_t
 	{
 		ESP_LOGW(TAG, "Retrying %d on SaveMultiStation for %d stations", i, number);
 		vTaskDelay((i++) * 20 + 100);
-		//		if (i == 3) {clientDisconnect("saveMultiStation low Memory"); vTaskDelay (300) ;}
+		// if (i == 3) {clientDisconnect("saveMultiStation low Memory"); vTaskDelay (300) ;}
 		if (i == 10)
 			return;
 	}
@@ -209,14 +204,14 @@ struct shoutcast_info *getStation(uint8_t position)
 
 	while (buffer == NULL)
 	{
-		//		ESP_LOGE(TAG,"getStation fails pos=%d",256);
+		// ESP_LOGE(TAG,"getStation fails pos=%d",256);
 		if (++i > 2)
 			break;
 		vTaskDelay(400);
 		buffer = malloc(256); // last chance
 	}
 	ESP_ERROR_CHECK(esp_partition_read(STATIONS, (position)*256, buffer, 256));
-	//eeGetData((position+1)*256, buffer, 256);
+	// eeGetData((position+1)*256, buffer, 256);
 
 	return (struct shoutcast_info *)buffer;
 }
@@ -245,6 +240,15 @@ void restoreDeviceSettings()
 	free(buffer);
 }
 
+void saveDeviceSettingsInt(struct device_settings *settings)
+{
+	ESP_ERROR_CHECK(esp_partition_erase_range(DEVICE, 0, DEVICE->size));
+	vTaskDelay(1);
+	ESP_ERROR_CHECK(esp_partition_write(DEVICE, 0, settings, DEVICE->size));
+	vTaskDelay(1);
+	xSemaphoreGive(muxDevice);
+}
+
 void saveDeviceSettings(struct device_settings *settings)
 {
 	if (settings == NULL)
@@ -254,11 +258,9 @@ void saveDeviceSettings(struct device_settings *settings)
 	}
 	ESP_LOGD(TAG, "saveDeviceSettings");
 	xSemaphoreTake(muxDevice, portMAX_DELAY);
-	ESP_ERROR_CHECK(esp_partition_erase_range(DEVICE, 0, DEVICE->size));
-	vTaskDelay(1);
-	ESP_ERROR_CHECK(esp_partition_write(DEVICE, 0, settings, DEVICE->size));
-	xSemaphoreGive(muxDevice);
+	saveDeviceSettingsInt(settings);
 }
+
 void saveDeviceSettingsVolume(struct device_settings *settings)
 {
 	if (settings == NULL)
@@ -269,10 +271,7 @@ void saveDeviceSettingsVolume(struct device_settings *settings)
 	ESP_LOGD(TAG, "saveDeviceSettingsVolume");
 	if (xSemaphoreTake(muxDevice, 0) == pdFALSE)
 		return; // not important. An other one in progress
-	ESP_ERROR_CHECK(esp_partition_erase_range(DEVICE, 0, DEVICE->size));
-	vTaskDelay(1);
-	ESP_ERROR_CHECK(esp_partition_write(DEVICE, 0, settings, DEVICE->size));
-	xSemaphoreGive(muxDevice);
+	saveDeviceSettingsInt(settings);
 }
 
 struct device_settings *getDeviceSettingsSilent()
@@ -292,6 +291,6 @@ struct device_settings *getDeviceSettings()
 	struct device_settings *buffer;
 	if ((buffer = getDeviceSettingsSilent()) == NULL)
 		ESP_LOGE(TAG, "getDeviceSetting fails");
-	//		printf(streGETDEVICE,0);
+	//	printf(streGETDEVICE,0);
 	return buffer;
 }

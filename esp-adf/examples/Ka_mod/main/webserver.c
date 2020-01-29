@@ -553,7 +553,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				{
 					return;
 				}
-				ESP_LOGD(TAG, "/sounvol vol: %s num:%d", param, vol);
+				ESP_LOGD(TAG, "/soundvol vol: %s num:%d", param, vol);
 				setVolume(param); // setVolume waits for a string
 				wsVol(param);
 				respOk(conn, NULL);

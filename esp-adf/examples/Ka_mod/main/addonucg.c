@@ -37,7 +37,7 @@
 #define CWHITE 255, 255, 255
 #define CRED 255, 10, 10
 
-// nams <--> num of line
+// names <--> num of line
 #define STATIONNAME 0
 #define STATION1 1
 #define STATION2 2
@@ -71,12 +71,13 @@ typedef enum sizefont
 	middle,
 	large
 } sizefont;
+
 void setfont(sizefont size)
 {
 	int inX = x;
 	if (yy <= 80)
 		inX = 96; // corrected for small yy
-				  //	printf("setfont charset: %d, size: %d,yy: %d, x: %d,  inX: %d\n",charset,size,yy,x,inX);
+				  // printf("setfont charset: %d, size: %d,yy: %d, x: %d,  inX: %d\n",charset,size,yy,x,inX);
 	switch (size)
 	{
 	case small:
@@ -115,7 +116,7 @@ void setfont(sizefont size)
 				ucg_SetFont(&ucg, ucg_font_inr16_mf);
 				break;
 			}
-			//			charset?ucg_SetFont(&ucg,ucg_font_crox5h ):ucg_SetFont(&ucg,ucg_font_inr16_mf ) ;
+			// charset?ucg_SetFont(&ucg,ucg_font_crox5h ):ucg_SetFont(&ucg,ucg_font_inr16_mf ) ;
 			break;
 		case 128:
 			switch (charset)
@@ -131,7 +132,7 @@ void setfont(sizefont size)
 				ucg_SetFont(&ucg, ucg_font_5x7_mf);
 				break;
 			}
-			//			charset?ucg_SetFont(&ucg,ucg_font_crox1c ):ucg_SetFont(&ucg,ucg_font_5x7_mf) ;
+			// charset?ucg_SetFont(&ucg,ucg_font_crox1c ):ucg_SetFont(&ucg,ucg_font_5x7_mf) ;
 			break;
 		case 132:
 			switch (charset)
@@ -147,7 +148,7 @@ void setfont(sizefont size)
 				ucg_SetFont(&ucg, ucg_font_5x7_mf);
 				break;
 			}
-			//			charset?ucg_SetFont(&ucg,ucg_font_crox1c ):ucg_SetFont(&ucg,ucg_font_5x7_mf) ;
+			// charset?ucg_SetFont(&ucg,ucg_font_crox1c ):ucg_SetFont(&ucg,ucg_font_5x7_mf) ;
 			break;
 		case 96:
 			switch (charset)
@@ -163,7 +164,7 @@ void setfont(sizefont size)
 				ucg_SetFont(&ucg, ucg_font_5x7_mf);
 				break;
 			}
-			//			charset?ucg_SetFont(&ucg,ucg_font_crox1c ):ucg_SetFont(&ucg,ucg_font_4x6_mf) ;
+			// charset?ucg_SetFont(&ucg,ucg_font_crox1c ):ucg_SetFont(&ucg,ucg_font_4x6_mf) ;
 			break;
 		default: // 160
 			switch (charset)
@@ -179,8 +180,7 @@ void setfont(sizefont size)
 				ucg_SetFont(&ucg, ucg_font_6x13_mf);
 				break;
 			}
-			//			charset?ucg_SetFont(&ucg,ucg_font_crox1c ):ucg_SetFont(&ucg,ucg_font_6x13_mf) ;
-			;
+			// charset?ucg_SetFont(&ucg,ucg_font_crox1c ):ucg_SetFont(&ucg,ucg_font_6x13_mf) ;
 		}
 		break;
 
@@ -197,12 +197,12 @@ void setfont(sizefont size)
 				ucg_SetFont(&ucg, ucg_font_helvR24_gr);
 				break;
 			default:
-			//case Latin:ucg_SetFont(&ucg,ucg_font_inr33_mf );break;
+			// case Latin:ucg_SetFont(&ucg,ucg_font_inr33_mf );break;
 			case Latin:
 				ucg_SetFont(&ucg, ucg_font_inb19_tf);
 				break;
 			}
-			//			charset?ucg_SetFont(&ucg,ucg_font_crox5h ):ucg_SetFont(&ucg,ucg_font_inr33_mf);
+			// charset?ucg_SetFont(&ucg,ucg_font_crox5h ):ucg_SetFont(&ucg,ucg_font_inr33_mf);
 			break;
 		case 128:
 			switch (charset)
@@ -218,7 +218,7 @@ void setfont(sizefont size)
 				ucg_SetFont(&ucg, ucg_font_7x14_mf);
 				break;
 			}
-			//			charset?ucg_SetFont(&ucg,ucg_font_crox3c ):ucg_SetFont(&ucg,ucg_font_7x14_mf);
+			// charset?ucg_SetFont(&ucg,ucg_font_crox3c ):ucg_SetFont(&ucg,ucg_font_7x14_mf);
 			break;
 		case 96:
 			switch (charset)
@@ -234,7 +234,7 @@ void setfont(sizefont size)
 				ucg_SetFont(&ucg, ucg_font_6x12_mf);
 				break;
 			}
-			//			charset?ucg_SetFont(&ucg,ucg_font_crox2h ):ucg_SetFont(&ucg,ucg_font_6x12_mf);
+			// charset?ucg_SetFont(&ucg,ucg_font_crox2h ):ucg_SetFont(&ucg,ucg_font_6x12_mf);
 			break;
 		case 132:
 		default: // 160
@@ -251,9 +251,7 @@ void setfont(sizefont size)
 				ucg_SetFont(&ucg, ucg_font_fur14_tf);
 				break;
 			}
-			//			charset?ucg_SetFont(&ucg,ucg_font_crox3c ):ucg_SetFont(&ucg,ucg_font_fur14_tf);
-
-			;
+			// charset?ucg_SetFont(&ucg,ucg_font_crox3c ):ucg_SetFont(&ucg,ucg_font_fur14_tf);
 		}
 		break;
 	case large:
@@ -309,6 +307,7 @@ void clearAllUcg()
 		mline[i] = 1;
 	}
 }
+
 ////////////////////////////////////////
 void cleartitleUcg(uint8_t froml)
 {
@@ -322,7 +321,7 @@ void cleartitleUcg(uint8_t froml)
 	}
 }
 
-//Thanks to Max
+// Thanks to Max
 void ucEraseSlashes(char *str)
 {
 	//Symbols: \" \' \\ \? \/
@@ -336,7 +335,7 @@ void ucEraseSlashes(char *str)
 				sym1 = sym + 1;
 				if (*sym1 == 0x22 || *sym1 == 0x27 || *sym1 == 0x5c || *sym1 == 0x3f || *sym1 == 0x2f)
 				{
-					*sym = 0x1f; //Erase \ to non-printable symbol
+					*sym = 0x1f; // Erase \ to non-printable symbol
 					sym++;
 				}
 			}
@@ -344,7 +343,7 @@ void ucEraseSlashes(char *str)
 		}
 	}
 }
-//-Max
+// -Max
 
 // non linear cyrillic conversion
 struct _utf8To1251_t
@@ -366,12 +365,11 @@ uint8_t to1251(uint16_t utf8)
 	{
 		if (utf8 == utf8To1251[i].utf8)
 		{
-			//			printf("to1251: utf8: %x, ret: %x\n",utf8,utf8To1251[i].c1251);
+			// printf("to1251: utf8: %x, ret: %x\n",utf8,utf8To1251[i].c1251);
 			return utf8To1251[i].c1251;
 		}
 	}
-
-	//	printf("to1251: utf8: %x, ret: %x\n",utf8,(utf8 - 0x350)& 0xff);
+	// printf("to1251: utf8: %x, ret: %x\n",utf8,(utf8 - 0x350)& 0xff);
 	return ((utf8 - 0x350) & 0xff);
 }
 
@@ -384,11 +382,11 @@ uint8_t to1253(uint16_t utf8)
 	{
 		if (utf8 == utf8To1251[i].utf8)
 		{
-//			printf("to1251: utf8: %x, ret: %x\n",utf8,utf8To1251[i].c1251);
+		//	printf("to1251: utf8: %x, ret: %x\n",utf8,utf8To1251[i].c1251);
 			return utf8To1251[i].c1251;
 		}
 	}
-*/
+	*/
 	//	printf("to1253: utf8: %x, ret: %x\n",utf8,(utf8 - 0x300)& 0xff);
 	return ((utf8 - 0x300) & 0xff);
 }
@@ -450,7 +448,6 @@ void removeUtf8(char *characters)
 		}
 		Rindex++;
 	}
-
 	ESP_LOGV(TAG, "removeUtf8 out: %s", characters);
 }
 
@@ -461,6 +458,7 @@ void markDrawResetUcg(int i)
 	iline[i] = 0;
 	tline[i] = 0;
 }
+
 ////////////////////////////////////////
 // scroll each line
 void scrollUcg()
@@ -612,8 +610,8 @@ void draw(int i)
 		break;
 	default:
 		ucg_SetColori(&ucg, 0, 0, 0);
-		//         ucg_DrawBox(&ucg,0,y*i+z,x,y-ucg_GetFontDescent(&ucg));
-		//          ucg_DrawBox(&ucg,0,y*i+z,x,y-1);
+		// ucg_DrawBox(&ucg,0,y*i+z,x,y-ucg_GetFontDescent(&ucg));
+		// ucg_DrawBox(&ucg,0,y*i+z,x,y-1);
 		ucg_DrawBox(&ucg, 0, y * i + z, x, y);
 		setColor(i);
 		if (lline[i] != NULL)
@@ -638,7 +636,7 @@ void drawLinesUcg()
 // draw all
 void drawFrameUcg(uint8_t mTscreen)
 {
-	//printf("drawFrameUcg, mTscreen: %d\n",mTscreen);
+	// printf("drawFrameUcg, mTscreen: %d\n",mTscreen);
 	int i;
 	if (dt == NULL)
 	{
@@ -665,7 +663,6 @@ void drawFrameUcg(uint8_t mTscreen)
 		break;
 	default:;
 	}
-
 	//screenBottomUcg();
 }
 
@@ -684,6 +681,7 @@ void drawTTitleUcg(char *ttitle)
 		strcpy(TTitleStr, ttitle);
 	}
 }
+
 //////////////////////////
 void drawNumberUcg(uint8_t mTscreen, char *irStr)
 {
@@ -707,12 +705,12 @@ void drawNumberUcg(uint8_t mTscreen, char *irStr)
 	default:;
 	}
 
-	//  screenBottomUcg();
+	// screenBottomUcg();
 }
+
 //////////////////////////
 void drawStationUcg(uint8_t mTscreen, char *snum, char *ddot)
 {
-
 	char ststr[] = {"Station"};
 	int16_t len;
 	LANG scharset;
@@ -728,9 +726,9 @@ void drawStationUcg(uint8_t mTscreen, char *snum, char *ddot)
 	case 2:
 		ucg_SetColor(&ucg, 0, CBLACK);
 		ucg_DrawBox(&ucg, 0, HHeader, x, yy);
-		//       setfont(middle);
+		// setfont(middle);
 		ucg_SetColor(&ucg, 0, CBODY);
-		//        ddot = strstr(sline,":");
+		// ddot = strstr(sline,":");
 		if (ddot != NULL)
 		{
 
@@ -747,10 +745,10 @@ void drawStationUcg(uint8_t mTscreen, char *snum, char *ddot)
 	}
 	charset = scharset;
 
-	//  screenBottomUcg();
+	// screenBottomUcg();
 }
 
-//void drawVolumeUcg(uint8_t mTscreen,char* aVolume)
+// void drawVolumeUcg(uint8_t mTscreen,char* aVolume)
 void drawVolumeUcg(uint8_t mTscreen)
 {
 	char vlstr[] = {"Volume"};
@@ -765,22 +763,22 @@ void drawVolumeUcg(uint8_t mTscreen)
 		drawTTitleUcg(vlstr);
 		/* fall through */
 	case 2:
-		//        ucg_SetFont(&ucg,ucg_font_inr49_tf);
+		// ucg_SetFont(&ucg,ucg_font_inr49_tf);
 		setfont(large);
 		uint16_t xxx;
 		xxx = (x / 2) - (ucg_GetStrWidth(&ucg, aVolume) / 2);
 		ucg_SetColor(&ucg, 0, CBLACK);
-		//ucg_SetFontMode(&ucg,UCG_FONT_MODE_SOLID);
-		//        ucg_DrawBox(&ucg,0,HHeader,x,yy);
+		// ucg_SetFontMode(&ucg,UCG_FONT_MODE_SOLID);
+		// ucg_DrawBox(&ucg,0,HHeader,x,yy);
 		ucg_DrawBox(&ucg, 0, yy / 3, x, ucg_GetFontAscent(&ucg) + 2);
 		ucg_SetColor(&ucg, 0, CBODY);
 		ucg_DrawString(&ucg, xxx, yy / 3, 0, aVolume);
-		//ucg_SetFontMode(&ucg,UCG_FONT_MODE_TRANSPARENT);
+		// ucg_SetFontMode(&ucg,UCG_FONT_MODE_TRANSPARENT);
 		break;
 	default:;
 	}
 
-	//  screenBottomUcg();
+	// screenBottomUcg();
 }
 
 static void drawSecond(unsigned timein)
@@ -799,7 +797,7 @@ static void drawSecond(unsigned timein)
 		ucg_SetColor(&ucg, 0, CBODY);
 		ucg_DrawString(&ucg, x - len - 8, yy - 18, 0, strseco);
 		ucg_SetFontMode(&ucg, UCG_FONT_MODE_TRANSPARENT);
-		insec = timein; //to avoid redisplay
+		insec = timein; // to avoid redisplay
 	}
 }
 
@@ -819,7 +817,7 @@ void drawTimeUcg(uint8_t mTscreen, unsigned timein)
 		ucg_SetColor(&ucg, 0, CRED);
 		TTitleStr[0] = 0;
 		TTimeStr[0] = 0;
-		//ucg_SetFont(&ucg,ucg_font_6x13_tf);
+		// ucg_SetFont(&ucg,ucg_font_6x13_tf);
 		ucg_DrawString(&ucg, 4, yy - 18, 0, strdate);
 		/* fall through */
 	case 2:
@@ -830,9 +828,9 @@ void drawTimeUcg(uint8_t mTscreen, unsigned timein)
 		drawTTitleUcg(strdate);
 		if (strcmp(TTimeStr, strtime) != 0)
 		{
-			//  ucg_SetFont(&ucg,ucg_font_inr38_mf);
+			// ucg_SetFont(&ucg,ucg_font_inr38_mf);
 			ucg_SetFont(&ucg, ucg_font_osb41_tn);
-			//	setfont(large);
+			// setfont(large);
 			ucg_SetColor(&ucg, 0, CBODY);
 			ucg_DrawString(&ucg, (x / 2) - (ucg_GetStrWidth(&ucg, strtime) / 2), yy / 3, 0, strtime);
 			strcpy(TTimeStr, strtime);
@@ -849,8 +847,8 @@ void drawTimeUcg(uint8_t mTscreen, unsigned timein)
 void separatorUcg(char *from)
 {
 	char *interp;
-	//    len = strlen(from);
-	//ucg_SetFont(&ucg,ucg_font_6x13_tf);
+	// len = strlen(from);
+	// ucg_SetFont(&ucg,ucg_font_6x13_tf);
 	setfont(text);
 	while (from[strlen(from) - 1] == ' ')
 		from[strlen(from) - 1] = 0; // avoid blank at end
@@ -915,7 +913,7 @@ void separatorUcg(char *from)
 	}
 }
 
-//cli.meta
+// cli.meta
 void metaUcg(char *ici)
 {
 	cleartitleUcg(TITLE1);
@@ -927,11 +925,11 @@ void metaUcg(char *ici)
 	separatorUcg(title);
 }
 
-//cli.icy4
+// cli.icy4
 void icy4Ucg(char *ici)
 {
 	char newstation[BUFLEN];
-	//move the STATION2 to STATION1S
+	// move the STATION2 to STATION1S
 	if ((station != NULL) && (lline[STATION2] != NULL))
 	{
 		strcpy(newstation, lline[STATION1]);
@@ -946,7 +944,8 @@ void icy4Ucg(char *ici)
 	lline[GENRE] = genre;
 	markDrawResetUcg(GENRE);
 }
-//cli.icy0
+
+// cli.icy0
 void icy0Ucg(char *ici)
 {
 	clearAllUcg();
@@ -958,7 +957,7 @@ void icy0Ucg(char *ici)
 	separatorUcg(station);
 }
 
-//cli.stopped or label
+// cli.stopped or label
 void statusUcg(const char *label)
 {
 	cleartitleUcg(TITLE1);
@@ -968,7 +967,8 @@ void statusUcg(const char *label)
 	strcpy(title, label);
 	lline[TITLE1] = title;
 }
-//cli.nameset
+
+// cli.nameset
 void namesetUcg(char *ici)
 {
 	strcpy(nameset, ici + 8);
@@ -1002,7 +1002,6 @@ void playingUcg()
 
 void lcd_initUcg(uint8_t *lcd_type)
 {
-
 	gpio_num_t miso;
 	gpio_num_t mosi;
 	gpio_num_t sclk;
@@ -1015,10 +1014,13 @@ void lcd_initUcg(uint8_t *lcd_type)
 	gpio_num_t cs;
 	gpio_num_t a0;
 	gpio_num_t rstlcd;
-	//	gpio_num_t t_cs;
-	//	gpio_num_t t_irq;
+	// gpio_num_t t_cs;
+	// gpio_num_t t_irq;
+
 	dt = getDt();
+
 	uint8_t rotat = getRotat();
+
 	ESP_LOGI(TAG, "lcd init  type: %d, Rotat: %d", *lcd_type, rotat);
 	if (*lcd_type == LCD_NONE)
 		return;
@@ -1039,7 +1041,7 @@ void lcd_initUcg(uint8_t *lcd_type)
 		if (rstlcd != GPIO_NONE)
 			ucg_esp32_hal.reset = rstlcd;
 	}
-	else //Color I2c (never seen this one)
+	else // Color I2c (never seen this one)
 	{
 		gpio_get_i2c(&scl, &sda, &rsti2c);
 		if (scl == GPIO_NONE || sda == GPIO_NONE)
@@ -1116,9 +1118,9 @@ void lcd_initUcg(uint8_t *lcd_type)
 	setTouchSize(x, yy);
 
 	if (yy <= 80)
-		y = -ucg_GetFontDescent(&ucg) + ucg_GetFontAscent(&ucg) + 2; //interline
+		y = -ucg_GetFontDescent(&ucg) + ucg_GetFontAscent(&ucg) + 2; // interline
 	else
-		y = -ucg_GetFontDescent(&ucg) + ucg_GetFontAscent(&ucg) + 3; //interline
+		y = -ucg_GetFontDescent(&ucg) + ucg_GetFontAscent(&ucg) + 3; // interline
 
 	HHeader = yy / 5;
 
