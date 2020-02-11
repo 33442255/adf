@@ -84,6 +84,8 @@ typedef struct {
 
 #define VCTRL	true
 #define SCTRL	false
+#define ECTRL	2
+
 
 extern xQueueHandle event_ir;
 extern u8g2_t u8g2;
@@ -98,6 +100,10 @@ void setFuturNum(int16_t new);
 int16_t getFuturNum();
 void addonDt();
 void wakeLcd();
+uint16_t GetWidth();
+uint16_t GetHeight();
+void setBlv(int val);
+
 void* getEncoder(int num);
 struct tm* getDt();
 

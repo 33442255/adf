@@ -23,6 +23,8 @@ function openwebsocket(){
 			}
 		changeTitle(document.getElementById('meta').innerHTML);
 		if (arr["wsvol"]) onRangeVolChange(arr['wsvol'],false); 
+		if (arr["lsleep"]) labelSleep(arr["lsleep"]); 
+		if (arr["lwake"]) labelWake(arr["lwake"]); 
 		if (arr["wsicy"]) icyResp(arr["wsicy"]); 
 		if (arr["wssound"]) soundResp(arr["wssound"]); 
 		if (arr["monitor"]) playMonitor(arr["monitor"]); 
@@ -229,8 +231,8 @@ function startSleep(){
 			else valm = 1440;
 		} else valm = h0; // minute mode
 		websocket.send("startSleep=" +valm +"&");
-		labelSleep("Started, Good night!");
-		window.setTimeout(labelSleep, 2000 ,(valm*60)-2);	
+//		labelSleep("Started, Good night!");
+//		window.setTimeout(labelSleep, 2000 ,(valm*60)-2);	
 	} else
 	{
 		labelSleep("Error, try again");
@@ -270,8 +272,8 @@ function startWake(){
 			else valm = 1440;
 		} else valm = h0; // minute mode
 		websocket.send("startWake=" +valm +"&");
-		labelWake("Started");
-		window.setTimeout(labelWake, 2000 ,(valm*60)-2);	
+//		labelWake("Started");
+//		window.setTimeout(labelWake, 2000 ,(valm*60)-2);	
 	} else
 	{
 		labelWake("Error, try again");
@@ -577,17 +579,17 @@ function hardware(valid) {
 			document.getElementById("output"+arr['coutput']).checked = true;
 			if (arr['coutput'] != "4") 
 			{
-				document.getElementById("vs1053Only").style.display = "none";
+				document.getElementById("vs1052Only").style.display = "none";
 			}
 			else {
-				document.getElementById("vs1053Only").style.display = "run-in";
+				document.getElementById("vs1052Only").style.display = "run-in";
 			}
 		}
 	}
 	xhr.open("POST","hardware",false);
 	xhr.setRequestHeader(content,ctype);
-	for (i=0 ;i<6;i++) if (document.getElementById('output'+i).checked) break;
-	if (i==6) coutput = 0;
+	for (i=0 ;i<5;i++) if (document.getElementById('output'+i).checked) break;
+	if (i==5) coutput = 0;
 	xhr.send("valid=" + valid 
 	+"&coutput=" + i
 	+"&");

@@ -17,7 +17,7 @@
 
 
 #define RELEASE "1.9"
-#define REVISION "6"
+#define REVISION "7"
 
 uint32_t checkUart(uint32_t speed);
 extern unsigned short adcdiv;	
@@ -34,6 +34,8 @@ void clientVol(char *s);
 uint8_t getLedGpio();
 void setLedGpio(uint8_t val);
 uint32_t getLcdOut();
+uint32_t getLcdStop();
+int getLcdBlv();
 bool getAutoWifi(void);
 void setAutoWifi();
 void fmSeekUp();

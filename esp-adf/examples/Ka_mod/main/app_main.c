@@ -35,7 +35,6 @@ Copyright (C) 2017  KaraWin
 #include "driver/i2s.h"
 #include "driver/uart.h"
 
-#include "lwip/err.h"
 #include "lwip/sys.h"
 #include "lwip/netdb.h"
 #include "lwip/api.h"
@@ -47,26 +46,21 @@ Copyright (C) 2017  KaraWin
 
 #include "spiram_fifo.h"
 #include "audio_renderer.h"
-//#include "bt_speaker.h"
-//#include "bt_config.h"
-//#include "mdns_task.h"
+
 #include "audio_player.h"
 #include <u8g2.h>
 #include "u8g2_esp32_hal.h"
 #include "addon.h"
 #include "addonu8g2.h"
+#include "ClickButtons.h"
 
 #include "eeprom.h"
 
 /////////////////////////////////////////////////////
 ///////////////////////////
-//#include "bt_config.h"
 #include "driver/gpio.h"
 #include "driver/i2c.h"
-//#include "esp_wifi.h"
-//#include "xi2c.h"
-//#include "fonts.h"
-//#include "ssd1306.h"
+
 #include "nvs_flash.h"
 #include "gpio.h"
 #include "servers.h"
@@ -181,7 +175,6 @@ IRAM_ATTR void sleepCallback(void *pArg)
 }
 IRAM_ATTR void wakeCallback(void *pArg)
 {
-
 	int timer_idx = (int)pArg;
 	queue_event_t evt;
 	TIMERG0.int_clr_timers.t1 = 1;
@@ -192,38 +185,75 @@ IRAM_ATTR void wakeCallback(void *pArg)
 	TIMERG0.hw_timer[timer_idx].config.alarm_en = 0;
 }
 
+uint64_t getSleep()
+{
+	uint64_t ret=0;
+	uint64_t tot=0;
+	timer_get_alarm_value(TIMERGROUP, sleepTimer,&tot);
+	timer_get_counter_value(TIMERGROUP, sleepTimer,&ret);
+	return ((tot-ret)/5000000);
+}
+uint64_t getWake()
+{
+	uint64_t ret=0;
+	uint64_t tot=0;
+	timer_get_alarm_value(TIMERGROUP, wakeTimer,&tot);
+	timer_get_counter_value(TIMERGROUP, wakeTimer,&ret);
+	return ((tot-ret)/5000000);
+}
+
+void tsocket(const char* lab, uint32_t cnt)
+{
+		char* title = malloc(88);
+		sprintf(title,"{\"%s\":\"%d\"}",lab,cnt*60); 
+		websocketbroadcast(title, strlen(title));
+		free(title);	
+}
+
+void stopSleep(){
+	ESP_LOGD(TAG,"stopDelayDelay\n");
+	ESP_ERROR_CHECK(timer_pause(TIMERGROUP, sleepTimer));
+	tsocket("lsleep",0);
+}
+
 void startSleep(uint32_t delay)
 {
 	ESP_LOGD(TAG, "Delay:%d\n", delay);
 	if (delay == 0)
 		return;
+	stopSleep();
 	ESP_ERROR_CHECK(timer_set_counter_value(TIMERGROUP, sleepTimer, 0x00000000ULL));
 	ESP_ERROR_CHECK(timer_set_alarm_value(TIMERGROUP, sleepTimer, TIMERVALUE(delay * 60)));
 	ESP_ERROR_CHECK(timer_enable_intr(TIMERGROUP, sleepTimer));
 	ESP_ERROR_CHECK(timer_set_alarm(TIMERGROUP, sleepTimer, TIMER_ALARM_EN));
 	ESP_ERROR_CHECK(timer_start(TIMERGROUP, sleepTimer));
 }
+
 void stopSleep()
 {
 	ESP_LOGD(TAG, "stopDelayDelay\n");
 	ESP_ERROR_CHECK(timer_pause(TIMERGROUP, sleepTimer));
 }
+
+void stopWake(){
+	ESP_LOGD(TAG,"stopDelayWake\n");
+	ESP_ERROR_CHECK(timer_pause(TIMERGROUP, wakeTimer));
+	tsocket("lwake",0);
+}
+
 void startWake(uint32_t delay)
 {
 	ESP_LOGD(TAG, "Wake Delay:%d\n", delay);
 	if (delay == 0)
 		return;
+	stopWake();
 	ESP_ERROR_CHECK(timer_set_counter_value(TIMERGROUP, wakeTimer, 0x00000000ULL));
 	//TIMER_INTERVAL0_SEC * TIMER_SCALE - TIMER_FINE_ADJ
 	ESP_ERROR_CHECK(timer_set_alarm_value(TIMERGROUP, wakeTimer, TIMERVALUE(delay * 60)));
 	ESP_ERROR_CHECK(timer_enable_intr(TIMERGROUP, wakeTimer));
 	ESP_ERROR_CHECK(timer_set_alarm(TIMERGROUP, wakeTimer, TIMER_ALARM_EN));
 	ESP_ERROR_CHECK(timer_start(TIMERGROUP, wakeTimer));
-}
-void stopWake()
-{
-	ESP_LOGD(TAG, "stopDelayWake\n");
-	ESP_ERROR_CHECK(timer_pause(TIMERGROUP, wakeTimer));
+	tsocket("lwake",delay);	
 }
 
 void initTimers()
@@ -740,6 +770,7 @@ void timerTask(void *p)
 	//	int uxHighWaterMark;
 
 	initTimers();
+	isEsplay = option_get_esplay();
 
 	gpio_get_ledgpio(&gpioLed);
 	setLedGpio(gpioLed);
@@ -770,12 +801,6 @@ void timerTask(void *p)
 			case TIMER_WAKE:
 				clientConnect(); // start the player
 				break;
-				//					case TIMER_1MS: // 1 ms
-				//					  ctimeMs++;	// for led
-				//					  ctimeVol++; // to save volume
-				//					break;
-				//					case TIMER_1mS:  //1µs
-				//					break;
 			default:
 				break;
 			}
@@ -814,7 +839,10 @@ void timerTask(void *p)
 			}
 			ctimeVol = 0;
 		}
-		vTaskDelay(1);
+		vTaskDelay(5);
+
+		if (isEsplay) // esplay board only
+			rexp = i2c_keypad_read(); // read the expansion
 	}
 	//	printf("t0 end\n");
 
@@ -959,6 +987,7 @@ void app_main()
 			g_device->cleared = 0xAABB;			   //marker init done
 			g_device->uartspeed = 115200;		   // default
 			g_device->audio_output_mode = I2S;	 // default
+			option_get_audio_output(&(g_device->audio_output_mode));
 			g_device->trace_level = ESP_LOG_ERROR; //default
 			g_device->vol = 100;				   //default
 			g_device->led_gpio = GPIO_NONE;
