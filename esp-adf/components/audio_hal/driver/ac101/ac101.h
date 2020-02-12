@@ -1,4 +1,5 @@
 // code from https://github.com/donny681/esp-adf/blob/master/components/audio_hal/driver/AC101/AC101.h
+// code from https://github.com/donny681/esp-adf/blob/master/components/audio_hal/driver/AC101/AC101.h
 
 #ifndef __AC101_H__
 #define __AC101_H__
@@ -70,17 +71,17 @@
 #define DAC_DAP_ENA     	0xb5
 
 typedef enum{
-	SIMPLE_RATE_8000	= 0x0000,
-	SIMPLE_RATE_11052	= 0x1000,
-	SIMPLE_RATE_12000	= 0x2000,
-	SIMPLE_RATE_16000	= 0x3000,
-	SIMPLE_RATE_22050	= 0x4000,
-	SIMPLE_RATE_24000	= 0x5000,
-	SIMPLE_RATE_32000	= 0x6000,
-	SIMPLE_RATE_44100	= 0x7000,
-	SIMPLE_RATE_48000	= 0x8000,
-	SIMPLE_RATE_96000	= 0x9000,
-	SIMPLE_RATE_192000	= 0xa000,
+	SAMPLE_RATE_8000	= 0x0000,
+	SAMPLE_RATE_11052	= 0x1000,
+	SAMPLE_RATE_12000	= 0x2000,
+	SAMPLE_RATE_16000	= 0x3000,
+	SAMPLE_RATE_22050	= 0x4000,
+	SAMPLE_RATE_24000	= 0x5000,
+	SAMPLE_RATE_32000	= 0x6000,
+	SAMPLE_RATE_44100	= 0x7000,
+	SAMPLE_RATE_48000	= 0x8000,
+	SAMPLE_RATE_96000	= 0x9000,
+	SAMPLE_RATE_192000	= 0xa000,
 }ac_adda_fs_i2s1_t;
 
 typedef enum{
@@ -162,6 +163,7 @@ esp_err_t ac101_init(audio_hal_codec_config_t* codec_cfg);
 esp_err_t ac101_deinit(void);
 esp_err_t ac101_ctrl_state(audio_hal_codec_mode_t mode, audio_hal_ctrl_t ctrl_state);
 esp_err_t ac101_config_i2s(audio_hal_codec_mode_t mode, audio_hal_codec_i2s_iface_t* iface);
+esp_err_t ac101_set_voice_mute(bool enable);
 esp_err_t ac101_set_voice_volume(int volume);
 esp_err_t ac101_get_voice_volume(int* volume);
 void ac101_pa_power(bool enable);
