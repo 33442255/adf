@@ -23,7 +23,12 @@
   */
 #ifndef _IOT_I2C_BUS_H_
 #define _IOT_I2C_BUS_H_
+
 #include "driver/i2c.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef void *i2c_bus_handle_t;
 
@@ -34,15 +39,14 @@ typedef void *i2c_bus_handle_t;
  * @param conf       Pointer to I2C parameters
  *
  * @return
- *     - NULL Fail
- *     - Others Success
+ *     - I2C bus handle
  */
 i2c_bus_handle_t i2c_bus_create(i2c_port_t port, i2c_config_t *conf);
 
 /**
- * @brief Write bytes to i2c bus
+ * @brief Write bytes to I2C bus
  *
- * @param port       I2C port number
+ * @param bus        I2C bus handle
  * @param addr       The address of the device
  * @param reg        The register of the device
  * @param regLen     The length of register
@@ -53,12 +57,12 @@ i2c_bus_handle_t i2c_bus_create(i2c_port_t port, i2c_config_t *conf);
  *     - NULL Fail
  *     - Others Success
  */
-esp_err_t i2c_bus_write_bytes(i2c_port_t port, int addr, uint8_t *reg, int regLen, uint8_t *data, int datalen);
+esp_err_t i2c_bus_write_bytes(i2c_bus_handle_t bus, int addr, uint8_t *reg, int regLen, uint8_t *data, int datalen);
 
 /**
- * @brief Write data to i2c bus
- * 
- * @param port       I2C port number
+ * @brief Write data to I2C bus
+ *
+ * @param bus        I2C bus handle
  * @param addr       The address of the device
  * @param data       The data pointer
  * @param datalen    The length of data
@@ -67,21 +71,22 @@ esp_err_t i2c_bus_write_bytes(i2c_port_t port, int addr, uint8_t *reg, int regLe
  *     - NULL Fail
  *     - Others Success
  */
-esp_err_t i2c_bus_write_data(i2c_port_t port, int addr, uint8_t *data, int datalen);
+esp_err_t i2c_bus_write_data(i2c_bus_handle_t bus, int addr, uint8_t *data, int datalen);
 
 /**
- * @brief Write data to i2c bus
- * 
- * @param port       I2C port number
+ * @brief Write data to I2C bus
+ *
+ * @param bus        I2C bus handle
  * @param addr       The address of the device
- * @param data       The data pointer
- * @param datalen    The length of data
+ * @param reg        The register of the device
+ * @param outdata    The outdata pointer
+ * @param len        The length of outdata
  *
  * @return
  *     - NULL Fail
  *     - Others Success
  */
-esp_err_t i2c_bus_read_bytes(i2c_port_t port, int addr, uint8_t *outdata, int len);
+esp_err_t i2c_bus_read_bytes(i2c_bus_handle_t bus, int addr, int reg, uint8_t *outdata, int len);
 
 /**
  * @brief Delete and release the I2C bus object
@@ -106,4 +111,9 @@ esp_err_t i2c_bus_delete(i2c_bus_handle_t bus);
  *     - ESP_FAIL Fail
  */
 esp_err_t i2c_bus_cmd_begin(i2c_bus_handle_t bus, i2c_cmd_handle_t cmd, portBASE_TYPE ticks_to_wait);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

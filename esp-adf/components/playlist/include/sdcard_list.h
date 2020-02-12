@@ -27,6 +27,10 @@
 
 #include "playlist.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Create a playlist in sdcard by list id
  *
@@ -37,9 +41,9 @@
  */
 esp_err_t sdcard_list_create(playlist_operator_handle_t *handle);
 
-/** 
+/**
  * @brief Show all the URLs in sdcard playlist
- * 
+ *
  * @param handle     Playlist handle
  *
  * @return ESP_OK    success
@@ -75,12 +79,24 @@ esp_err_t sdcard_list_prev(playlist_operator_handle_t handle, int step, char **u
  * @brief Get current URL in sdcard playlist
  *
  * @param      handle         Playlist handle
- * @param[out] url_buff       A second rank pointer to get a address of URL   
+ * @param[out] url_buff       A second rank pointer to get a address of URL
  *
  * @return ESP_OK     success
- *         ESP_FAIL   failed  
+ *         ESP_FAIL   failed
  */
 esp_err_t sdcard_list_current(playlist_operator_handle_t handle, char **url_buff);
+
+/**
+ * @brief Choose a url by url id
+ *
+ * @param      handle          Playlist handle
+ * @param      url_id          The id of url in sdcard list
+ * @param[out] url_buff        A second rank pointer to get a address of URL
+ *
+ * @return ESP_OK    success
+ * @return ESP_FAIL  failed
+ */
+esp_err_t sdcard_list_choose(playlist_operator_handle_t handle, int url_id, char **url_buff);
 
 /**
  * @brief Get URLs number in sdcard playlist
@@ -112,5 +128,9 @@ esp_err_t sdcard_list_destroy(playlist_operator_handle_t handle);
  *         ESP_FAIL  failed
  */
 esp_err_t sdcard_list_save(playlist_operator_handle_t handle, const char *url);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

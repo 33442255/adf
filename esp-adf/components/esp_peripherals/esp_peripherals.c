@@ -23,7 +23,6 @@
  */
 
 #include <string.h>
-#include <sys/time.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
@@ -33,8 +32,6 @@
 #include "audio_event_iface.h"
 #include "audio_mutex.h"
 #include "esp_peripherals.h"
-#include "esp_intr_alloc.h"
-#include "driver/gpio.h"
 
 static const char *TAG = "ESP_PERIPH";
 
@@ -144,8 +141,8 @@ esp_periph_set_handle_t esp_periph_set_init(esp_periph_config_t *config)
 
     //TODO: Should we uninstall gpio isr service??
     //TODO: Because gpio need for sdcard and gpio, then install isr here
-    // gpio_uninstall_isr_service();
-    //gpio_install_isr_service(ESP_INTR_FLAG_LEVEL1);
+
+    gpio_install_isr_service(ESP_INTR_FLAG_LEVEL1);
 
     periph_sets->run = false;
     xEventGroupClearBits(periph_sets->state_event_bits, STARTED_BIT);
@@ -187,7 +184,6 @@ esp_err_t esp_periph_set_destroy(esp_periph_set_handle_t periph_set_handle)
     }
     periph_set_handle->run = false;
     esp_periph_wait_for_stop(periph_set_handle, portMAX_DELAY);
-
     esp_periph_handle_t item, tmp;
     STAILQ_FOREACH_SAFE(item, &periph_set_handle->periph_list, entries, tmp) {
         STAILQ_REMOVE(&periph_set_handle->periph_list, item, esp_periph, entries);
@@ -197,7 +193,7 @@ esp_err_t esp_periph_set_destroy(esp_periph_set_handle_t periph_set_handle)
     mutex_destroy(periph_set_handle->lock);
     vEventGroupDelete(periph_set_handle->state_event_bits);
 
-    //gpio_uninstall_isr_service();
+    gpio_uninstall_isr_service();
     audio_event_iface_destroy(periph_set_handle->event_handle.iface);
     free(periph_set_handle);
     periph_set_handle = NULL;
@@ -464,14 +460,6 @@ esp_err_t esp_periph_set_id(esp_periph_handle_t periph, esp_periph_id_t periph_i
 {
     periph->periph_id = periph_id;
     return ESP_OK;
-}
-
-long long esp_periph_tick_get()
-{
-    struct timeval te;
-    gettimeofday(&te, NULL);
-    long long milliseconds = te.tv_sec * 1000LL + te.tv_usec / 1000;
-    return milliseconds;
 }
 
 esp_err_t esp_periph_init(esp_periph_handle_t periph)

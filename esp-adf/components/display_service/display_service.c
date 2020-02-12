@@ -47,7 +47,7 @@ static const char *TAG                  = "DISPLAY";
 typedef struct display_service_impl {
     periph_service_handle_t          based;
     void                            *instance;
-    char                            *service_name;
+    const char                      *service_name;
     void                            *user_data;
 } display_service_impl_t;
 

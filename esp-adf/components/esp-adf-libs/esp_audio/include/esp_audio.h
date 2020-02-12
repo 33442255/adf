@@ -7,6 +7,10 @@
 #include "audio_common.h"
 #include "audio_element.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef void *esp_audio_handle_t;
 
 #define DEFAULT_ESP_AUDIO_CONFIG() {\
@@ -21,6 +25,7 @@ typedef void *esp_audio_handle_t;
     .vol_set = NULL,\
     .vol_get = NULL,\
     .task_prio = 6,\
+    .task_stack = 4 * 1024,\
 }
 
 /**
@@ -50,6 +55,7 @@ typedef struct {
     audio_volume_set            vol_set;                    /*!< Set volume callback */
     audio_volume_get            vol_get;                    /*!< Get volume callback*/
     int                         task_prio;                  /*!< esp_audio task priority*/
+    int                         task_stack;                 /*!< Size of esp_audio task stack */
 } esp_audio_cfg_t;
 
 /**
@@ -188,6 +194,7 @@ audio_err_t esp_audio_codec_lib_query(esp_audio_handle_t handle, audio_codec_typ
  *       even if other decoders are added.
  *     - Enabled `CONFIG_FATFS_API_ENCODING_UTF_8`, the URI can be support Chinese characters.
  *     - Asynchronous interface
+ *     - The maximum of block time can be modify by `esp_audio_set_play_timeout`, default value is 25 seconds.
  *
  * @param handle The esp_audio_handle_t instance
  * @param uri    Such as "file://sdcard/test.wav" or "http://iot.espressif.com/file/example.mp3".
@@ -211,6 +218,7 @@ audio_err_t esp_audio_play(esp_audio_handle_t handle, audio_codec_type_t type, c
  *     - All features are same with `esp_audio_play`
  *     - Synchronous interface
  *     - Support decoder mode only
+ *     - No any events post during playing
  *
  * @param handle The esp_audio_handle_t instance
  * @param uri    Such as "file://sdcard/test.wav" or "http://iot.espressif.com/file/example.mp3",
@@ -226,12 +234,13 @@ audio_err_t esp_audio_play(esp_audio_handle_t handle, audio_codec_type_t type, c
 audio_err_t esp_audio_sync_play(esp_audio_handle_t handle, const char *uri, int pos);
 
 /**
- * @brief Stop the esp_audio
+ * @brief A synchronous interface for stop the esp_audio. The maximum of block time is 8000ms.
  *
- * @note If user queue has been registered by evt_que, AUDIO_STATUS_STOPPED event for success
+ * @note 1. If user queue has been registered by evt_que, AUDIO_STATUS_STOPPED event for success
  *       or AUDIO_STATUS_ERROR event for error will be received.
- *       `TERMINATION_TYPE_DONE` only works with input stream which can't stopped by itself,
+ *       2. `TERMINATION_TYPE_DONE` only works with input stream which can't stopped by itself,
  *       e.g. `raw read/write stream`, others streams are no effect.
+ *       3. The synchronous interface is used to ensure that working pipeline is stopped.
  *
  * @param[in] handle The esp_audio instance
  * @param[in] type   Stop immediately or done
@@ -246,8 +255,9 @@ audio_err_t esp_audio_stop(esp_audio_handle_t handle, audio_termination_type_t t
 /**
  * @brief Pause the esp_audio
  *
- * @note Only support music and without live stream. If user queue has been registered by evt_que, AUDIO_STATUS_PAUSED event for success
+ * @note 1. Only support music and without live stream. If user queue has been registered by evt_que, AUDIO_STATUS_PAUSED event for success
  *       or AUDIO_STATUS_ERROR event for error will be received.
+ *       2. The Paused music must be stoped by `esp_audio_stop` before new playing, otherwise got block on new play.
  *
  * @param[in] handle The esp_audio instance
  *
@@ -323,7 +333,7 @@ audio_err_t esp_audio_state_get(esp_audio_handle_t handle, esp_audio_state_t *st
  * @return
  *      - ESP_ERR_AUDIO_NO_ERROR: on succss
  *      - ESP_ERR_AUDIO_INVALID_PARAMETER: no esp_audio instance
- *      - ESP_ERR_AUDIO_NOT_READY：the status is not running.:no out stream.
+ *      - ESP_ERR_AUDIO_NOT_READY：no codec element
  */
 audio_err_t esp_audio_pos_get(esp_audio_handle_t handle, int *pos);
 
@@ -338,7 +348,7 @@ audio_err_t esp_audio_pos_get(esp_audio_handle_t handle, int *pos);
  * @return
  *      - ESP_ERR_AUDIO_NO_ERROR: on succss
  *      - ESP_ERR_AUDIO_INVALID_PARAMETER: no esp_audio instance
- *      - ESP_ERR_AUDIO_NOT_READY：the status is not running.:no out stream.
+ *      - ESP_ERR_AUDIO_NOT_READY：no out stream
  */
 audio_err_t esp_audio_time_get(esp_audio_handle_t handle, int *time);
 
@@ -412,5 +422,55 @@ audio_err_t esp_audio_info_set(esp_audio_handle_t handle, esp_audio_info_t *info
  *      - ESP_ERR_AUDIO_INVALID_PARAMETER: invalid arguments
  */
 audio_err_t esp_audio_callback_set(esp_audio_handle_t handle, esp_audio_event_callback cb, void *cb_ctx);
+
+/**
+ * @brief Seek the position in second of currently played music.
+ *
+ * @note This function works only with decoding music.
+ *
+ * @param[in] handle            The esp_audio instance
+ * @param[out] seek_time_sec     A pointer to int that indicates esp_audio decoding position.
+ *
+ * @return
+ *      - ESP_ERR_AUDIO_NO_ERROR: on succss
+ *      - ESP_ERR_AUDIO_FAIL: codec or allocation fail
+ *      - ESP_ERR_AUDIO_TIMEOUT: timeout for sync the element status
+ *      - ESP_ERR_AUDIO_INVALID_PARAMETER: no esp_audio instance
+ *      - ESP_ERR_AUDIO_NOT_SUPPORT: codec has finished
+ *      - ESP_ERR_AUDIO_OUT_OF_RANGE: the seek_time_ms is out of the range
+ *      - ESP_ERR_AUDIO_NOT_READY: the status is neither running nor paused
+ */
+audio_err_t esp_audio_seek(esp_audio_handle_t handle, int seek_time_sec);
+
+/**
+ * @brief Get the duration in microseconds of playing music.
+ *
+ * @note This function works only with decoding music.
+ *
+ * @param[in] handle        The esp_audio instance
+ * @param[out] duration     A pointer to int that indicates decoding total time.
+ *
+ * @return
+ *      - ESP_ERR_AUDIO_NO_ERROR: on succss
+ *      - ESP_ERR_AUDIO_INVALID_PARAMETER: no esp_audio instance
+ *      - ESP_ERR_AUDIO_NOT_READY：no codec element or no in element
+ */
+audio_err_t esp_audio_duration_get(esp_audio_handle_t handle, int *duration);
+
+/**
+ * @brief Setting the maximum amount of time to waiting for `esp_audio_play` only.
+ *
+ * @param[in] handle        The esp_audio instance
+ * @param[in] time_ms       The maximum amount of time
+ *
+ * @return
+ *      - ESP_ERR_AUDIO_NO_ERROR: on succss
+ *      - ESP_ERR_AUDIO_INVALID_PARAMETER: invalid arguments
+ */
+audio_err_t esp_audio_set_play_timeout(esp_audio_handle_t handle, int time_ms);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

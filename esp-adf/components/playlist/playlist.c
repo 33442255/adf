@@ -22,7 +22,7 @@
  *
  */
 
-#include "sys/queue.h"
+#include "rom/queue.h"
 #include "esp_log.h"
 #include "audio_mem.h"
 #include "audio_error.h"
@@ -96,6 +96,24 @@ esp_err_t playlist_prev(playlist_handle_t handle, int step, char **url_buff)
     cur_handle->get_operation(&operation);
 
     ret = operation.prev(cur_handle, step, url_buff);
+    mutex_unlock(handle->playlist_operate_lock);
+    return ret;
+}
+
+esp_err_t playlist_choose(playlist_handle_t handle, int url_id, char **url_buff)
+{
+    AUDIO_NULL_CHECK(TAG, handle, return ESP_FAIL);
+    AUDIO_NULL_CHECK(TAG, handle->cur_playlist, return ESP_FAIL);
+
+    esp_err_t ret = ESP_OK;
+    mutex_lock(handle->playlist_operate_lock);
+
+    playlist_info_t *cur_list = handle->cur_playlist;
+    playlist_operator_handle_t cur_handle = cur_list->list_handle;
+    playlist_operation_t operation = {0};
+    cur_handle->get_operation(&operation);
+    
+    ret = operation.choose(cur_handle, url_id, url_buff);
     mutex_unlock(handle->playlist_operate_lock);
     return ret;
 }

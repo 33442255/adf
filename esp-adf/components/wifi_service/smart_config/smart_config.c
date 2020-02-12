@@ -23,7 +23,7 @@
 /* Smartconfig events definitions */
 ESP_EVENT_DEFINE_BASE(SC_EVENT);
 
-static const char *TAG = "smartconfig";
+static char *TAG = "SMART_CONFIG";
 
 static void handler_got_ssid_passwd(void *arg, esp_event_base_t base, int32_t event_id, void *data)
 {
