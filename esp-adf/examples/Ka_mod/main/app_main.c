@@ -187,33 +187,34 @@ IRAM_ATTR void wakeCallback(void *pArg)
 
 uint64_t getSleep()
 {
-	uint64_t ret=0;
-	uint64_t tot=0;
-	timer_get_alarm_value(TIMERGROUP, sleepTimer,&tot);
-	timer_get_counter_value(TIMERGROUP, sleepTimer,&ret);
-	return ((tot-ret)/5000000);
+	uint64_t ret = 0;
+	uint64_t tot = 0;
+	timer_get_alarm_value(TIMERGROUP, sleepTimer, &tot);
+	timer_get_counter_value(TIMERGROUP, sleepTimer, &ret);
+	return ((tot - ret) / 5000000);
 }
 uint64_t getWake()
 {
-	uint64_t ret=0;
-	uint64_t tot=0;
-	timer_get_alarm_value(TIMERGROUP, wakeTimer,&tot);
-	timer_get_counter_value(TIMERGROUP, wakeTimer,&ret);
-	return ((tot-ret)/5000000);
+	uint64_t ret = 0;
+	uint64_t tot = 0;
+	timer_get_alarm_value(TIMERGROUP, wakeTimer, &tot);
+	timer_get_counter_value(TIMERGROUP, wakeTimer, &ret);
+	return ((tot - ret) / 5000000);
 }
 
-void tsocket(const char* lab, uint32_t cnt)
+void tsocket(const char *lab, uint32_t cnt)
 {
-		char* title = malloc(88);
-		sprintf(title,"{\"%s\":\"%d\"}",lab,cnt*60); 
-		websocketbroadcast(title, strlen(title));
-		free(title);	
+	char *title = malloc(88);
+	sprintf(title, "{\"%s\":\"%d\"}", lab, cnt * 60);
+	websocketbroadcast(title, strlen(title));
+	free(title);
 }
 
-void stopSleep(){
-	ESP_LOGD(TAG,"stopDelayDelay\n");
+void stopSleep()
+{
+	ESP_LOGD(TAG, "stopDelayDelay\n");
 	ESP_ERROR_CHECK(timer_pause(TIMERGROUP, sleepTimer));
-	tsocket("lsleep",0);
+	tsocket("lsleep", 0);
 }
 
 void startSleep(uint32_t delay)
@@ -229,16 +230,11 @@ void startSleep(uint32_t delay)
 	ESP_ERROR_CHECK(timer_start(TIMERGROUP, sleepTimer));
 }
 
-void stopSleep()
+void stopWake()
 {
-	ESP_LOGD(TAG, "stopDelayDelay\n");
-	ESP_ERROR_CHECK(timer_pause(TIMERGROUP, sleepTimer));
-}
-
-void stopWake(){
-	ESP_LOGD(TAG,"stopDelayWake\n");
+	ESP_LOGD(TAG, "stopDelayWake\n");
 	ESP_ERROR_CHECK(timer_pause(TIMERGROUP, wakeTimer));
-	tsocket("lwake",0);
+	tsocket("lwake", 0);
 }
 
 void startWake(uint32_t delay)
@@ -253,7 +249,7 @@ void startWake(uint32_t delay)
 	ESP_ERROR_CHECK(timer_enable_intr(TIMERGROUP, wakeTimer));
 	ESP_ERROR_CHECK(timer_set_alarm(TIMERGROUP, wakeTimer, TIMER_ALARM_EN));
 	ESP_ERROR_CHECK(timer_start(TIMERGROUP, wakeTimer));
-	tsocket("lwake",delay);	
+	tsocket("lwake", delay);
 }
 
 void initTimers()
@@ -700,7 +696,7 @@ void start_network()
 		}
 
 		const ip_addr_t *ipdns0 = dns_getserver(0);
-		ESP_LOGW(TAG,"DNS: %s  \n", ip4addr_ntoa((struct ip4_addr *)&ipdns0));
+		ESP_LOGW(TAG, "DNS: %s  \n", ip4addr_ntoa((struct ip4_addr *)&ipdns0));
 
 		if (dhcpEn) // if dhcp enabled update fields
 		{
@@ -753,7 +749,7 @@ void start_network()
 	}
 	ip4_addr_copy(ipAddr, info.ip);
 	strcpy(localIp, ip4addr_ntoa(&ipAddr));
-	ESP_LOGW(TAG,"IP: %s\n\n", localIp);
+	ESP_LOGW(TAG, "IP: %s\n\n", localIp);
 
 	if (g_device->lcd_type != LCD_NONE)
 		lcd_welcome(localIp, "IP found");
@@ -766,12 +762,12 @@ void timerTask(void *p)
 	//	struct device_settings *device;
 	uint32_t cCur;
 	bool stateLed = false;
+	bool isEsplay;
 	gpio_num_t gpioLed;
 	//	int uxHighWaterMark;
 
 	initTimers();
 	isEsplay = option_get_esplay();
-
 	gpio_get_ledgpio(&gpioLed);
 	setLedGpio(gpioLed);
 	/*
@@ -829,19 +825,9 @@ void timerTask(void *p)
 			}
 		}
 
-		if (ctimeVol >= TEMPO_SAVE_VOL)
-		{
-			if (g_device->vol != getIvol())
-			{
-				g_device->vol = getIvol();
-				saveDeviceSettingsVolume(g_device);
-				//				ESP_LOGD("timerTask",striWATERMARK,uxTaskGetStackHighWaterMark( NULL ),xPortGetFreeHeapSize( ));
-			}
-			ctimeVol = 0;
-		}
-		vTaskDelay(5);
+		vTaskDelay(10);
 
-		if (isEsplay) // esplay board only
+		if (isEsplay)				  // esplay board only
 			rexp = i2c_keypad_read(); // read the expansion
 	}
 	//	printf("t0 end\n");
@@ -968,7 +954,7 @@ void app_main()
 	// Check if we are in large Sram config
 	if (xPortGetFreeHeapSize() > 0x80000)
 		bigRam = true;
-	
+
 	partitions_init(); // init partition table
 	ESP_LOGI(TAG, "Partition init done...");
 
@@ -984,9 +970,9 @@ void app_main()
 			free(g_device);
 			eeEraseAll();
 			g_device = getDeviceSettings();
-			g_device->cleared = 0xAABB;			   //marker init done
-			g_device->uartspeed = 115200;		   // default
-			g_device->audio_output_mode = I2S;	 // default
+			g_device->cleared = 0xAABB;		   //marker init done
+			g_device->uartspeed = 115200;	  // default
+			g_device->audio_output_mode = I2S; // default
 			option_get_audio_output(&(g_device->audio_output_mode));
 			g_device->trace_level = ESP_LOG_ERROR; //default
 			g_device->vol = 100;				   //default
@@ -1049,7 +1035,7 @@ void app_main()
 	// ESP_LOGE(TAG,"Corrupt1 %d",heap_caps_check_integrity(MALLOC_CAP_DMA,1));
 
 	ESP_LOGI(TAG, "LCD Type %d", g_device->lcd_type); // lcd init
-	
+
 	setRotat(rt); // lcd rotation
 
 	lcd_init(g_device->lcd_type);
@@ -1117,7 +1103,7 @@ void app_main()
 	//-----------------------------------------------------
 
 	clientInit();
-	
+
 	err = mdns_init(); // initialize mDNS service
 	if (err)
 		ESP_LOGE(TAG, "mDNS Init failed: %d", err);
