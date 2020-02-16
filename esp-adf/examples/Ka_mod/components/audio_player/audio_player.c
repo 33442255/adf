@@ -107,6 +107,7 @@ static int start_decoder_task(player_t *player)
 		player->decoder_status = RUNNING;
 	}
 	
+		spiRamFifoReset();
 		ESP_LOGD(TAG, "decoder task created: %s", task_name);
 
     return 0;

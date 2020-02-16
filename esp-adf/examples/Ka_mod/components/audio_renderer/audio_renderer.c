@@ -179,7 +179,6 @@ void render_samples(char *buf, uint32_t buf_len, pcm_format_t *buf_desc)
 //	  ESP_LOGI(TAG, "render_samples len: %d",buf_len);
 	int res = 0;
 	uint8_t* outBuf8;
-//	uint16_t* outBuf16;
 	uint32_t* outBuf32;
 	uint64_t* outBuf64;
 	
@@ -245,9 +244,8 @@ void render_samples(char *buf, uint32_t buf_len, pcm_format_t *buf_desc)
         // don't block, rather retry
         size_t bytes_left = buf_len;
         size_t bytes_written = 0;
-        while(bytes_left > 0 && renderer_status != STOPPED) {
-			ESP_LOGV(TAG, "i2s_write  nb: %d",bytes_left);
-            res = i2s_write(renderer_instance->i2s_num, buf, bytes_left,& bytes_written, 0);
+        while((bytes_left > 0) && (renderer_status == RUNNING)) {
+	           res = i2s_write(renderer_instance->i2s_num, buf, bytes_left,& bytes_written, 0);
 			if (res != ESP_OK) {
 				ESP_LOGE(TAG, "i2s_write error %d",res);
 			}
@@ -420,8 +418,8 @@ void renderer_start()
         return;
 
     // buffer might contain noise
-//    i2s_zero_dma_buffer(renderer_instance->i2s_num);
-	ESP_LOGV(TAG, "Start" );
+    i2s_zero_dma_buffer(renderer_instance->i2s_num);
+	ESP_LOGD(TAG, "Start" );
     i2s_start(renderer_instance->i2s_num);
     renderer_status = RUNNING;		
 }
@@ -431,7 +429,7 @@ void renderer_stop()
     if(renderer_status == STOPPED)
         return;
     renderer_status = STOPPED;	
-	ESP_LOGV(TAG, "Stop" );	
+	ESP_LOGD(TAG, "Stop" );	
 	i2s_stop(renderer_instance->i2s_num);
 }
 

@@ -187,11 +187,10 @@ void fdkaac_decoder_task(void *pvParameters)
 	//renderer_zero_dma_buffer();
     player->decoder_status = STOPPED;
     player->decoder_command = CMD_NONE;
-	vTaskDelay(1);
     ESP_LOGD(TAG, "Decoder stopped.\n");
-    spiRamFifoReset();
     ESP_LOGI(TAG, "aac decoder finished  %x    %x",(int)in_buf,(int)pcm_buf);
     aacDecoder_Close(handle);
+    spiRamFifoReset();
     buf_destroy(in_buf);
     buf_destroy(pcm_buf);
 	//esp_task_wdt_delete(NULL);
