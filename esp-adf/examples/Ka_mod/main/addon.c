@@ -753,14 +753,18 @@ void buttonCompute(Button_t *enc, uint8_t role)
 		{
 			Button state1 = getButtons(enc, 1);
 			Button state2 = getButtons(enc, 2);
-			if ((state1 != Open) || (state2 != Open))
-				ESP_LOGD(TAG, "Button1: %i, Button2: %i", state1, state2);
 			newValue = ((state1 != Open) ? 5 : 0) + ((state2 != Open) ? -5 : 0); // sstation take + or - in any value
-			typeScreen estate;
-			if (role)
-				estate = sstation;
-			else
-				estate = svolume;
+			typeScreen estate = snull;
+			if ((isButton0 ^ isButton1) && (!isEsplay)) // one button and not esplay
+			{
+				if (role)
+					estate = sstation;
+				else
+					estate = svolume;
+				//			ESP_LOGD(TAG,"Button1:nono: %d   %d    %d",isButton0,isButton1,isEsplay);
+			}
+			if ((state1 != Open) || (state2 != Open))
+				ESP_LOGD(TAG, "Button1: %i, Button2: %i, newValue: %d, estate: %d, stateScreen: %d", state1, state2, newValue, estate, stateScreen);
 			if ((stateScreen != estate) && (newValue != 0))
 			{
 				if (role)
@@ -812,11 +816,7 @@ void encoderCompute(Encoder_t *enc, bool role)
 	if (newValue != 0)
 		ESP_LOGD(TAG, "encoder value: %d, stateScreen: %d", newValue, stateScreen);
 	Button newButton = getButton(enc);
-	typeScreen estate;
-	if (role)
-		estate = sstation;
-	else
-		estate = svolume;
+
 	// if an event on encoder switch
 	if (newButton != Open)
 	{
@@ -838,6 +838,15 @@ void encoderCompute(Encoder_t *enc, bool role)
 	} //else
 	  // no event on button switch
 	{
+		typeScreen estate = snull;
+		if ((isEncoder0 ^ isEncoder1) && (!isEsplay)) // one button and not esplay
+		{
+			if (role)
+				estate = sstation;
+			else
+				estate = svolume;
+		}
+
 		if ((stateScreen != estate) && (newValue != 0))
 		{
 			if (role)
