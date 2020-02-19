@@ -28,7 +28,8 @@ enum clientStatus cstatus;
 //static uint32_t metacount = 0;
 //static uint16_t metasize = 0;
 
-extern bool ledStatus;
+extern bool ledStatus, ledPolarity;
+;
 
 xSemaphoreHandle sConnect, sConnected, sDisconnect, sHeader;
 
@@ -796,6 +797,9 @@ void clientSilentConnect()
 void clientSilentDisconnect()
 {
 	xSemaphoreGive(sDisconnect);
+	
+	ESP_LOGW(TAG, "Client silent Disconnect!!!! Stopping player");
+
 	audio_player_stop();
 	for (int i = 0; i < 100; i++)
 	{
@@ -810,6 +814,9 @@ void clientDisconnect(const char *from)
 {
 	kprintf(CLISTOP, from);
 	xSemaphoreGive(sDisconnect);
+
+	ESP_LOGW(TAG, "Client Disconnect!!!! Stopping player");
+
 	audio_player_stop();
 	for (int i = 0; i < 100; i++)
 	{
@@ -819,7 +826,8 @@ void clientDisconnect(const char *from)
 	}
 	if ((from[0] != 'C') || (from[1] != '_'))
 		if (!ledStatus)
-			gpio_set_level(getLedGpio(), 0);
+			if (getLedGpio() != GPIO_NONE)
+				gpio_set_level(getLedGpio(), ledPolarity ? 1 : 0);
 	esp_wifi_set_ps(WIFI_PS_MAX_MODEM);
 	vTaskDelay(5);
 	// save the volume if needed on stop state
@@ -926,6 +934,8 @@ void clientReceiveCallback(int sockfd, char *pdata, int len)
 					metad = header.members.single.metaint;
 				ESP_LOGD(TAG, "t1: 0x%x, cstatus: %d, icyfound: %d  metad:%d Metaint:%d\n", (int)t1, cstatus, icyfound, metad, (header.members.single.metaint));
 				cstatus = C_DATA; // a stream found
+
+				ESP_LOGW(TAG, "Stream found!!!! Start player");
 
 				/////////////////////////////////////////////////////////////////////////////////////////////////
 				player_config->media_stream->eof = false;
@@ -1198,7 +1208,8 @@ void clientReceiveCallback(int sockfd, char *pdata, int len)
 			setVolumei(getVolume());
 			kprintf(CLIPLAY, 0x0d, 0x0a);
 			if (!ledStatus)
-				gpio_set_level(getLedGpio(), 1);
+				if (getLedGpio() != GPIO_NONE)
+					gpio_set_level(getLedGpio(), ledPolarity ? 0 : 1);
 		}
 	}
 }
@@ -1380,6 +1391,10 @@ void clientTask(void *pvParams)
 			if (playing) // stop clean
 			{
 				setVolumei(0);
+
+				ESP_LOGW(TAG, "Stop clean!!!! Stopping player");
+
+
 				audio_player_stop();
 				//if (get_audio_output_mode() == VS1053) spiRamFifoReset();
 				player_config->media_stream->eof = true;
