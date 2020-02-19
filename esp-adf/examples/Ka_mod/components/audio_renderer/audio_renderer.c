@@ -18,7 +18,6 @@
 #include "driver/dac.h"
 #include "gpio.h"
 #include "app_main.h"
-#include "MerusAudio.h"
 
 #include "audio_player.h"
 #include "audio_renderer.h"
@@ -54,7 +53,7 @@ static void init_i2s(renderer_config_t *config)
 		comm_fmt = I2S_COMM_FORMAT_PCM | I2S_COMM_FORMAT_PCM_SHORT;
     }
 
-	if ((config->output_mode == I2S)||(config->output_mode == A1S)||(config->output_mode == I2S_MERUS))
+	if ((config->output_mode == I2S)||(config->output_mode == A1S))
 	{
 	/* don't use audio pll on buggy rev0 chips */
 	// don't do it for PDM
@@ -405,9 +404,9 @@ void renderer_init(renderer_config_t *config)
     ESP_LOGD(TAG, "init I2S mode %d, port %d, %d bit, %d Hz", config->output_mode, config->i2s_num, config->bit_depth, config->sample_rate);
     init_i2s(config);
 
-    if(config->output_mode == I2S_MERUS) {
-        if (init_ma120(0x50))			// setup ma120x0p and initial volume
-			config->output_mode = I2S;	// error, back to I2S
+    if(config->output_mode == I2S_MERUS) 
+	{
+		config->output_mode = I2S;	// error, back to I2S
     }
 }
 
