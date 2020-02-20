@@ -800,7 +800,9 @@ void clientSilentDisconnect()
 	
 	ESP_LOGW(TAG, "Client silent Disconnect!!!! Stopping player");
 
-	audio_player_stop();
+	if (get_player_status()!=STOPPED)
+		audio_player_stop();
+
 	for (int i = 0; i < 100; i++)
 	{
 		if (!clientIsConnected())
@@ -817,7 +819,9 @@ void clientDisconnect(const char *from)
 
 	ESP_LOGW(TAG, "Client Disconnect!!!! Stopping player");
 
-	audio_player_stop();
+	if (get_player_status() != STOPPED)
+		audio_player_stop();
+
 	for (int i = 0; i < 100; i++)
 	{
 		if (!clientIsConnected())
@@ -1394,8 +1398,9 @@ void clientTask(void *pvParams)
 
 				ESP_LOGW(TAG, "Stop clean!!!! Stopping player");
 
-
-				audio_player_stop();
+				if (get_player_status() != STOPPED)
+					audio_player_stop();
+	
 				//if (get_audio_output_mode() == VS1053) spiRamFifoReset();
 				player_config->media_stream->eof = true;
 				//				bufferReset();

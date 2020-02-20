@@ -937,8 +937,7 @@ void sysledgpio(char *s)
 		kprintf(stritCMDERROR);
 		return;
 	}
-	g_device->led_gpio = value;
-	led_gpio = value;
+	setLedGpio(value);
 	gpio_output_conf(value);
 	saveDeviceSettings(g_device);
 	gpio_set_ledgpio(value); // write in nvs if any
@@ -1207,7 +1206,7 @@ uint32_t getLcdStop()
 void sysled(char *s)
 {
 	char *t = strstr(s, parslashquote);
-	extern bool ledStatus;
+	extern bool ledStatus, ledPolarity;
 	if (t == NULL)
 	{
 		kprintf("##Led is in %s mode#\n", ((g_device->options & T_LED) == 0) ? "Blink" : "Play");
@@ -1224,8 +1223,8 @@ void sysled(char *s)
 	{
 		g_device->options |= T_LED;
 		ledStatus = false;
-		if (getState())
-			gpio_set_level(getLedGpio(), 0);
+		if (getLedGpio() != GPIO_NONE)
+			gpio_set_level(getLedGpio(), ledPolarity ? 0 : 1);
 	}
 	else
 	{
@@ -1258,8 +1257,8 @@ void sysledpol(char *s)
 	{
 		g_device->options |= T_LEDPOL;
 		ledPolarity = true;
-		if (getState())
-			gpio_set_level(getLedGpio(), 0);
+		if (getLedGpio() != GPIO_NONE)
+			gpio_set_level(getLedGpio(), ledPolarity ? 0 : 1);
 	}
 	else
 	{

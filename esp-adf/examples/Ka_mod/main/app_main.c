@@ -96,7 +96,7 @@ xQueueHandle event_queue;
 //xSemaphoreHandle print_mux;
 static uint16_t FlashOn = 5, FlashOff = 5;
 bool ledStatus = true;	// true: normal blink, false: led on when playing
-bool ledPolarity = false; // true: normal false: reverse
+bool ledPolarity = true; // true: normal false: reverse
 player_t *player_config;
 static output_mode_t audio_output_mode;
 static uint8_t clientIvol = 0;
@@ -768,18 +768,19 @@ void timerTask(void *p)
 
 	initTimers();
 	isEsplay = option_get_esplay();
+
+	gpioLed = getLedGpio();
 	gpio_get_ledgpio(&gpioLed);
 	setLedGpio(gpioLed);
-	/*
-	printf("FIRST LED GPIO: %d, SSID:%d\n",gpioLed,g_device->current_ap);
-*/
+
+	//printf("FIRST LED GPIO: %d, SSID:%d\n",gpioLed,g_device->current_ap);
+
 	if (gpioLed != GPIO_NONE)
 	{
 		gpio_output_conf(gpioLed);
-		gpio_set_level(gpioLed, 0);
+		gpio_set_level(gpioLed, ledPolarity ? 1 : 0);
 	}
 	cCur = FlashOff * 10;
-
 	queue_event_t evt;
 
 	while (1)
@@ -809,15 +810,15 @@ void timerTask(void *p)
 
 				if (stateLed)
 				{
-					if (gpioLed != GPIO_NONE)
-						gpio_set_level(gpioLed, ledPolarity ? 1 : 0);
+					if (getLedGpio() != GPIO_NONE)
+						gpio_set_level(getLedGpio(), ledPolarity ? 1 : 0);
 					stateLed = false;
 					cCur = FlashOff * 10;
 				}
 				else
 				{
-					if (gpioLed != GPIO_NONE)
-						gpio_set_level(gpioLed, ledPolarity ? 0 : 1);
+					if (getLedGpio() != GPIO_NONE)
+						gpio_set_level(getLedGpio(), ledPolarity ? 0 : 1);
 					stateLed = true;
 					cCur = FlashOn * 10;
 				}
@@ -984,6 +985,12 @@ void app_main()
 	}
 
 	copyDeviceSettings(); // copy in the safe partion
+	
+	// led mode
+	if (g_device->options & T_LED)
+		ledStatus = false;
+	if (g_device->options & T_LEDPOL)
+		ledPolarity = true;
 
 	// init softwares
 	telnetinit();
@@ -1162,12 +1169,6 @@ void app_main()
 */
 	vTaskDelay(60); // wait tasks init
 	ESP_LOGI(TAG, " Init Done");
-
-	// led mode
-	if (g_device->options & T_LED)
-		ledStatus = false;
-	if (g_device->options & T_LEDPOL)
-		ledPolarity = true;
 
 	setIvol(g_device->vol);
 	kprintf("READY. Type help for a list of commands\n");
