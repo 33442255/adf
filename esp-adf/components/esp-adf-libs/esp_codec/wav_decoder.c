@@ -6,6 +6,7 @@
 #include "audio_element.h"
 #include "wav_decoder.h"
 #include "wav_head.h"
+#include "audio_error.h"
 
 static const char *TAG = "WAV_DECODER";
 #define HEAD_SIZE (44)
@@ -125,24 +126,27 @@ esp_err_t wav_decoder_get_pos(audio_element_handle_t self, void *in_data, int in
 audio_element_handle_t wav_decoder_init(wav_decoder_cfg_t *config)
 {
     wav_decoder_t *wav = audio_calloc(1, sizeof(wav_decoder_t));
-    mem_assert(wav);
+    AUDIO_MEM_CHECK(TAG, wav, {return NULL;});
     audio_element_cfg_t cfg = DEFAULT_AUDIO_ELEMENT_CONFIG();
     cfg.destroy = _wav_decoder_destroy;
     cfg.process = _wav_decoder_process;
     cfg.open = _wav_decoder_open;
     cfg.close = _wav_decoder_close;
     cfg.seek = wav_decoder_get_pos;
-    cfg.task_stack = config->task_stack;
-    cfg.task_prio = config->task_prio;
-    cfg.task_core = config->task_core;
-    cfg.out_rb_size = config->out_rb_size;
-    if (cfg.task_stack == 0) {
-        cfg.task_stack = WAV_DECODER_TASK_STACK;
+    cfg.task_stack = WAV_DECODER_TASK_STACK;
+    if (config) {
+        if (config->task_stack) {
+            cfg.task_stack = config->task_stack;
+        }
+        cfg.task_prio = config->task_prio;
+        cfg.task_core = config->task_core;
+        cfg.out_rb_size = config->out_rb_size;
     }
+
     cfg.tag = "wav";
 
     audio_element_handle_t el = audio_element_init(&cfg);
-    mem_assert(el);
+    AUDIO_MEM_CHECK(TAG, el, {audio_free(wav); return NULL;});
     audio_element_setdata(el, wav);
     ESP_LOGD(TAG, "wav_decoder_init");
     return el;

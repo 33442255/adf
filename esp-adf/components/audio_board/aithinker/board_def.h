@@ -25,12 +25,25 @@
 #ifndef _AUDIO_BOARD_DEFINITION_H_
 #define _AUDIO_BOARD_DEFINITION_H_
 
-#define HEADPHONE_DETECT          GPIO_NUM_5
-#define PA_ENABLE_GPIO            GPIO_NUM_19
+#define SDCARD_OPEN_FILE_NUM_MAX  5
+#define SDCARD_INTR_GPIO          GPIO_NUM_34
+#define SDCARD_PWR_CTRL           GPIO_NUM_13
 
+#define BUTTON_VOLUP_ID           0
+#define BUTTON_VOLDOWN_ID         1
+#define BUTTON_SET_ID             2
+#define BUTTON_PLAY_ID            3
+#define BUTTON_MODE_ID            4
+#define BUTTON_REC_ID             5
+
+#define HEADPHONE_DETECT          GPIO_NUM_19
+#define PA_ENABLE_GPIO            GPIO_NUM_21
+
+#define BLUE_LED_GPIO             GPIO_NUM_27
 #define GREEN_LED_GPIO            GPIO_NUM_22
 
-extern audio_hal_func_t AUDIO_CODEC_AC101_CODEC_HANDLE;
+extern audio_hal_func_t AUDIO_CODEC_ES8311_DEFAULT_HANDLE;
+extern audio_hal_func_t AUDIO_CODEC_ES7243_DEFAULT_HANDLE;
 
 #define AUDIO_CODEC_DEFAULT_CONFIG(){                   \
         .adc_input  = AUDIO_HAL_ADC_INPUT_LINE1,        \
@@ -43,5 +56,40 @@ extern audio_hal_func_t AUDIO_CODEC_AC101_CODEC_HANDLE;
             .bits = AUDIO_HAL_BIT_LENGTH_16BITS,        \
         },                                              \
 };
+
+#define INPUT_KEY_NUM     6
+
+#define INPUT_KEY_DEFAULT_INFO() {                      \
+     {                                                  \
+        .type = PERIPH_ID_ADC_BTN,                      \
+        .user_id = INPUT_KEY_USER_ID_REC,               \
+        .act_id = BUTTON_REC_ID,                        \
+    },                                                  \
+    {                                                   \
+        .type = PERIPH_ID_ADC_BTN,                      \
+        .user_id = INPUT_KEY_USER_ID_MODE,              \
+        .act_id = BUTTON_MODE_ID,                       \
+    },                                                  \
+    {                                                   \
+        .type = PERIPH_ID_ADC_BTN,                      \
+        .user_id = INPUT_KEY_USER_ID_SET,               \
+        .act_id = BUTTON_SET_ID,                        \
+    },                                                  \
+    {                                                   \
+        .type = PERIPH_ID_ADC_BTN,                      \
+        .user_id = INPUT_KEY_USER_ID_PLAY,              \
+        .act_id = BUTTON_PLAY_ID,                       \
+    },                                                  \
+    {                                                   \
+        .type = PERIPH_ID_ADC_BTN,                      \
+        .user_id = INPUT_KEY_USER_ID_VOLUP,             \
+        .act_id = BUTTON_VOLUP_ID,                      \
+    },                                                  \
+    {                                                   \
+        .type = PERIPH_ID_ADC_BTN,                      \
+        .user_id = INPUT_KEY_USER_ID_VOLDOWN,           \
+        .act_id = BUTTON_VOLDOWN_ID,                    \
+    }                                                   \
+}
 
 #endif

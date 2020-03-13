@@ -30,7 +30,6 @@
 #include "board_pins_config.h"
 #include "esp_peripherals.h"
 #include "display_service.h"
-#include "driver/touch_pad.h"
 
 #ifdef __cplusplus
 extern "C" {

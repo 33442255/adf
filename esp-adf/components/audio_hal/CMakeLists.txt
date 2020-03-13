@@ -3,7 +3,9 @@ set(COMPONENT_ADD_INCLUDEDIRS ./include
                             ./driver/es8374
                             ./driver/es8311
                             ./driver/es7243
-                            ./driver/ac101
+                            ./driver/es7148
+							./driver/ac101
+                            ./driver/tas5805m
                             ./driver/zl38063
                             ./driver/zl38063/api_lib
                             ./driver/zl38063/example_apps
@@ -20,7 +22,9 @@ set(COMPONENT_SRCS ./audio_hal.c
                     ./driver/es8374/es8374.c
                     ./driver/es8311/es8311.c
                     ./driver/es7243/es7243.c
+                    ./driver/es7148/es7148.c
                     ./driver/ac101/ac101.c
+					./driver/tas5805m/tas5805m.c
                     ./driver/zl38063/zl38063.c
                     ./driver/zl38063/api_lib/vprocTwolf_access.c
                     ./driver/zl38063/api_lib/vproc_common.c
@@ -32,5 +36,5 @@ set(COMPONENT_SRCS ./audio_hal.c
 
 register_component()
 
-target_link_libraries(${COMPONENT_LIB} INTERFACE "-L${CMAKE_CURRENT_LIST_DIR}/driver/zl38063/firmware")
-target_link_libraries(${COMPONENT_LIB} INTERFACE firmware)
+target_link_libraries(${COMPONENT_TARGET} INTERFACE "-L${CMAKE_CURRENT_LIST_DIR}/driver/zl38063/firmware")
+target_link_libraries(${COMPONENT_TARGET} INTERFACE firmware)

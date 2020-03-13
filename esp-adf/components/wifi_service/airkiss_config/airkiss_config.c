@@ -283,11 +283,7 @@ void airkiss_ssdp_notify(airkiss_lan_pack_param_t *lan_param)
 
 static void airkiss_send_ack_task(void *pvParameters)
 {
-    esp_netif_ip_info_t local_ip;
-	
-	esp_netif_t *sta = esp_netif_create_default_wifi_sta();
-	assert(sta);
-
+    tcpip_adapter_ip_info_t local_ip;
     struct sockaddr_in server_addr;
     socklen_t sin_size = sizeof(server_addr);
     int send_socket = 0;
@@ -308,7 +304,7 @@ static void airkiss_send_ack_task(void *pvParameters)
 
     while (1) {
         /* Get local IP address of station */
-        ret = esp_netif_get_ip_info(sta, &local_ip);
+        ret = tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &local_ip);
         if ((ESP_OK == ret) && (local_ip.ip.addr != INADDR_ANY)) {
             /* Create UDP socket. */
             send_socket = socket(AF_INET, SOCK_DGRAM, 0);
