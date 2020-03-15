@@ -1279,124 +1279,128 @@ void task_lcd(void *pvParams)
 	event_lcd_t evt;  // lcd event
 	event_lcd_t evt1; // lcd event
 	ESP_LOGD(TAG, "task_lcd Started, LCD Type %d", lcd_type);
-	defaultStateScreen = (g_device->options32 & T_TOGGLETIME) ? stime : smain;
-	option_get_lcd_blv(&blv); // init backlight value;
-	backlight_percentage_set(blv);
+
 	if (lcd_type != LCD_NONE)
+	{
+		defaultStateScreen = (g_device->options32 & T_TOGGLETIME) ? stime : smain;
+		option_get_lcd_blv(&blv); // init backlight value;
+		backlight_percentage_set(blv);
+		
 		drawFrame();
 
-	while (1)
-	{
-		if (itLcdOut == 1) // switch off the lcd
+		while (1)
 		{
-			sleepLcd();
-		}
-
-		if (timerScroll >= 500) //500 ms
-		{
-			if (lcd_type != LCD_NONE)
+			if (itLcdOut == 1) // switch off the lcd
 			{
-				if (stateScreen == smain)
-				{
-					scroll();
-				}
-				if ((stateScreen == stime) || (stateScreen == smain))
-				{
-					mTscreen = MTREFRESH;
-				} // display time
-
-				drawScreen();
+				sleepLcd();
 			}
-			timerScroll = 0;
-		}
-		if (event_lcd != NULL)
-			while (xQueueReceive(event_lcd, &evt, 0))
+
+			if (timerScroll >= 500) //500 ms
 			{
-				//			if (lcd_type == LCD_NONE) continue;
-				if (evt.lcmd != lmeta)
-					ESP_LOGV(TAG, "event_lcd: %x, %d, mTscreen: %d", (int)evt.lcmd, (int)evt.lline, mTscreen);
-				else
-					ESP_LOGV(TAG, "event_lcd: %x  %s, mTscreen: %d", (int)evt.lcmd, evt.lline, mTscreen);
-				switch (evt.lcmd)
+				if (lcd_type != LCD_NONE)
 				{
-				case lmeta:
-					isColor ? metaUcg(evt.lline) : metaU8g2(evt.lline);
-					Screen(smain);
-					wakeLcd();
-					break;
-				case licy4:
-					isColor ? icy4Ucg(evt.lline) : icy4U8g2(evt.lline);
-					break;
-				case licy0:
-					isColor ? icy0Ucg(evt.lline) : icy0U8g2(evt.lline);
-					break;
-				case lstop:
-					isColor ? statusUcg(stopped) : statusU8g2(stopped);
-					Screen(smain);
-					wakeLcd();
-					break;
-				case lnameset:
-					isColor ? namesetUcg(evt.lline) : namesetU8g2(evt.lline);
-					isColor ? statusUcg("STARTING") : statusU8g2("STARTING");
-					Screen(smain);
-					wakeLcd();
-					break;
-				case lplay:
-					isColor ? playingUcg() : playingU8g2();
-					break;
-				case lvol:
-					// ignore it if the next is a lvol
-					if (xQueuePeek(event_lcd, &evt1, 0))
-						if (evt1.lcmd == lvol)
-							break;
-					isColor ? setVolumeUcg(volume) : setVolumeU8g2(volume);
-					if (dvolume)
+					if (stateScreen == smain)
 					{
-						Screen(svolume);
-						wakeLcd();
+						scroll();
 					}
-					dvolume = true;
-					break;
-				case lovol:
-					dvolume = false; // don't show volume on start station
-					break;
-				case estation:
-					if (xQueuePeek(event_lcd, &evt1, 0))
-						if (evt1.lcmd == estation)
-						{
-							evt.lline = NULL;
-							break;
-						}
-					ESP_LOGD(TAG, "estation val: %d", (uint32_t)evt.lline);
-					changeStation((uint32_t)evt.lline);
-					Screen(sstation);
-					wakeLcd();
-					evt.lline = NULL; // just a number
-					break;
-				case eclrs:
-					isColor ? ucg_ClearScreen(&ucg) : u8g2_ClearDisplay(&u8g2);
-					break;
-				case escreen:
-					Screen((uint32_t)evt.lline);
-					wakeLcd();
-					evt.lline = NULL; // just a number Don't free
-					break;
-				case etoggle:
-					defaultStateScreen = (stateScreen == smain) ? stime : smain;
-					(stateScreen == smain) ? Screen(stime) : Screen(smain);
-					g_device->options32 = (defaultStateScreen == smain) ? g_device->options32 & NT_TOGGLETIME : g_device->options32 | T_TOGGLETIME;
-					wakeLcd();
-					//					saveDeviceSettings(g_device);
-					break;
-				default:;
+					if ((stateScreen == stime) || (stateScreen == smain))
+					{
+						mTscreen = MTREFRESH;
+					} // display time
+
+					drawScreen();
 				}
-				if (evt.lline != NULL)
-					free(evt.lline);
-				vTaskDelay(4);
+				timerScroll = 0;
 			}
-		if ((event_lcd) && (!uxQueueMessagesWaiting(event_lcd)))
-			vTaskDelay(10);
-		vTaskDelay(4);
+			if (event_lcd != NULL)
+				while (xQueueReceive(event_lcd, &evt, 0))
+				{
+					//			if (lcd_type == LCD_NONE) continue;
+					if (evt.lcmd != lmeta)
+						ESP_LOGV(TAG, "event_lcd: %x, %d, mTscreen: %d", (int)evt.lcmd, (int)evt.lline, mTscreen);
+					else
+						ESP_LOGV(TAG, "event_lcd: %x  %s, mTscreen: %d", (int)evt.lcmd, evt.lline, mTscreen);
+					switch (evt.lcmd)
+					{
+					case lmeta:
+						isColor ? metaUcg(evt.lline) : metaU8g2(evt.lline);
+						Screen(smain);
+						wakeLcd();
+						break;
+					case licy4:
+						isColor ? icy4Ucg(evt.lline) : icy4U8g2(evt.lline);
+						break;
+					case licy0:
+						isColor ? icy0Ucg(evt.lline) : icy0U8g2(evt.lline);
+						break;
+					case lstop:
+						isColor ? statusUcg(stopped) : statusU8g2(stopped);
+						Screen(smain);
+						wakeLcd();
+						break;
+					case lnameset:
+						isColor ? namesetUcg(evt.lline) : namesetU8g2(evt.lline);
+						isColor ? statusUcg("STARTING") : statusU8g2("STARTING");
+						Screen(smain);
+						wakeLcd();
+						break;
+					case lplay:
+						isColor ? playingUcg() : playingU8g2();
+						break;
+					case lvol:
+						// ignore it if the next is a lvol
+						if (xQueuePeek(event_lcd, &evt1, 0))
+							if (evt1.lcmd == lvol)
+								break;
+						isColor ? setVolumeUcg(volume) : setVolumeU8g2(volume);
+						if (dvolume)
+						{
+							Screen(svolume);
+							wakeLcd();
+						}
+						dvolume = true;
+						break;
+					case lovol:
+						dvolume = false; // don't show volume on start station
+						break;
+					case estation:
+						if (xQueuePeek(event_lcd, &evt1, 0))
+							if (evt1.lcmd == estation)
+							{
+								evt.lline = NULL;
+								break;
+							}
+						ESP_LOGD(TAG, "estation val: %d", (uint32_t)evt.lline);
+						changeStation((uint32_t)evt.lline);
+						Screen(sstation);
+						wakeLcd();
+						evt.lline = NULL; // just a number
+						break;
+					case eclrs:
+						isColor ? ucg_ClearScreen(&ucg) : u8g2_ClearDisplay(&u8g2);
+						break;
+					case escreen:
+						Screen((uint32_t)evt.lline);
+						wakeLcd();
+						evt.lline = NULL; // just a number Don't free
+						break;
+					case etoggle:
+						defaultStateScreen = (stateScreen == smain) ? stime : smain;
+						(stateScreen == smain) ? Screen(stime) : Screen(smain);
+						g_device->options32 = (defaultStateScreen == smain) ? g_device->options32 & NT_TOGGLETIME : g_device->options32 | T_TOGGLETIME;
+						wakeLcd();
+						//					saveDeviceSettings(g_device);
+						break;
+					default:;
+					}
+					if (evt.lline != NULL)
+						free(evt.lline);
+					vTaskDelay(4);
+				}
+			if ((event_lcd) && (!uxQueueMessagesWaiting(event_lcd)))
+				vTaskDelay(10);
+			vTaskDelay(4);
+		}
 	}
 	vTaskDelete(NULL);
 }
