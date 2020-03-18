@@ -17,13 +17,13 @@ struct servFile
 #define ICACHE_STORE_ATTR __attribute__((aligned(4)))
 #define ICACHE_RAM_ATTR __attribute__((section(".iram0.text")))
 
-#include "../../webpage/.index"
-#include "../../webpage/.style"
-#include "../../webpage/.style1"
-#include "../../webpage/.script"
-#include "../../webpage/.tabbis"
-#include "../../webpage/.logo"
-#include "../../webpage/.favicon"
+#include "../../webpage_mod/.index"
+#include "../../webpage_mod/.style"
+#include "../../webpage_mod/.style1"
+#include "../../webpage_mod/.script"
+#include "../../webpage_mod/.tabbis"
+#include "../../webpage_mod/.logo"
+#include "../../webpage_mod/.favicon"
 
 const struct servFile faviconFile = {
 	"/favicon.png",

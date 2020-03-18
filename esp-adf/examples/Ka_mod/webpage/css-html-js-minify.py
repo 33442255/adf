@@ -35,7 +35,7 @@ try:
     from subprocess import getoutput
     from shutil import disk_usage
     from io import StringIO  # pure-Python StringIO supports unicode.
-    #import resource  # windows dont have resource
+    import resource  # windows dont have resource
 except ImportError:
     request = getoutput = disk_usage = resource = None
     from StringIO import StringIO  # lint:ok

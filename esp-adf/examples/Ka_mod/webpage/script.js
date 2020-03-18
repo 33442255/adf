@@ -579,10 +579,10 @@ function hardware(valid) {
 			document.getElementById("output"+arr['coutput']).checked = true;
 			if (arr['coutput'] != "4") 
 			{
-				document.getElementById("vs1053Only").style.display = "none";
+				document.getElementById("vs1052Only").style.display = "none";
 			}
 			else {
-				document.getElementById("vs1053Only").style.display = "run-in";
+				document.getElementById("vs1052Only").style.display = "run-in";
 			}
 		}
 	}
