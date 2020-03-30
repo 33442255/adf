@@ -1,5 +1,5 @@
 /******************************************************************************
- * 
+ *
  * Copyright 2018 karawin (http://www.karawin.fr)
  *
 *******************************************************************************/
@@ -71,6 +71,7 @@ typedef enum sizefont
 	middle,
 	large
 } sizefont;
+
 void setfont(sizefont size)
 {
 	int inX = x;
@@ -200,7 +201,7 @@ void setfont(sizefont size)
 				ucg_SetFont(&ucg, ucg_font_helvR24_gr);
 				break;
 			default:
-			//case Latin:ucg_SetFont(&ucg,ucg_font_inr33_mf );break;
+				//case Latin:ucg_SetFont(&ucg,ucg_font_inr33_mf );break;
 			case Latin:
 				ucg_SetFont(&ucg, ucg_font_inb19_tf);
 				break;
@@ -274,11 +275,110 @@ void setfont(sizefont size)
 			break;
 		case 132:
 		default: // 160
-			ucg_SetFont(&ucg, ucg_font_inr38_mr);
-			//ucg_SetFont(&ucg, ucg_font_helvB18_tf);
+			//ucg_SetFont(&ucg, ucg_font_inr38_mr);
+			ucg_SetFont(&ucg, ucg_font_helvB18_tf);
 			;
 		}
 		break;
+	default:
+		ESP_LOGE(TAG, "Default for size %d\n", size);
+	}
+
+	if (yy <= 80)
+		y = -ucg_GetFontDescent(&ucg) + ucg_GetFontAscent(&ucg) + 2; //interline
+	else
+		y = -ucg_GetFontDescent(&ucg) + ucg_GetFontAscent(&ucg) + 3; //interline
+}
+
+void setDigiSize(sizefont size)
+{
+	int inX = x;
+	if (yy <= 80)
+		inX = 96; // corrected for small yy
+
+	switch (size)
+	{
+	case small:
+		switch (inX)
+		{
+		case 320:
+		case 240:
+			ucg_SetFont(&ucg, ucg_font_osb18_tf);
+			break;
+		case 128:
+			ucg_SetFont(&ucg, ucg_font_4x6_mf);
+			break;
+		case 96:
+			ucg_SetFont(&ucg, ucg_font_u8glib_4_hf);
+			break;
+		case 132:
+		default: // 160
+			ucg_SetFont(&ucg, ucg_font_5x8_mf);
+		}
+		break;
+
+	case text:
+		switch (inX)
+		{
+		case 320:
+		case 240:
+			ucg_SetFont(&ucg, ucg_font_osb21_tf);
+			break;
+		case 128:
+			ucg_SetFont(&ucg, ucg_font_5x7_mf);
+			break;
+		case 132:
+			ucg_SetFont(&ucg, ucg_font_5x7_mf);
+			break;
+		case 96:
+			ucg_SetFont(&ucg, ucg_font_5x7_mf);
+			break;
+		default: // 160
+			ucg_SetFont(&ucg, ucg_font_6x13_mf);
+			break;
+		}
+		break;
+
+	case middle:
+		switch (inX)
+		{
+		case 320:
+		case 240:
+			ucg_SetFont(&ucg, ucg_font_osb29_tf);
+			break;
+		case 128:
+			ucg_SetFont(&ucg, ucg_font_osb18_tf);
+			break;
+		case 96:
+			ucg_SetFont(&ucg, ucg_font_6x12_mf);
+			break;
+		case 132:
+		default: // 160
+			ucg_SetFont(&ucg, ucg_font_osb18_tf);
+			break;
+		}
+		break;
+
+	case large:
+		switch (inX)
+		{
+		case 320:
+		case 240:
+			ucg_SetFont(&ucg, ucg_font_osb41_tn);
+			break;
+		case 128:
+			ucg_SetFont(&ucg, ucg_font_osb21_hf);
+			break;
+		case 96:
+			ucg_SetFont(&ucg, ucg_font_osb18_hf);
+			break;
+		case 132:
+		default: // 160
+			ucg_SetFont(&ucg, ucg_font_osb41_tn);
+			break;
+		}
+		break;
+
 	default:
 		ESP_LOGE(TAG, "Default for size %d\n", size);
 	}
@@ -588,7 +688,7 @@ void draw(int i)
 	case TIME:
 		if ((yy > 80) || (lline[TITLE21] == NULL) || (strlen(lline[TITLE21]) == 0))
 		{
-			setfont(small);
+			setDigiSize(small);
 			char strsec[30];
 			if (getDdmm())
 				sprintf(strsec, "%02d-%02d  %02d:%02d:%02d", dt->tm_mday, dt->tm_mon + 1, dt->tm_hour, dt->tm_min, dt->tm_sec);
@@ -606,8 +706,8 @@ void draw(int i)
 			}
 			else
 			{
-				xpos = (3 * x / 4) - (len / 2);
-				yyy = yy - 10;
+				xpos = (x - len);
+				yyy = yy - 22;
 				ucg_DrawString(&ucg, xpos, yyy, 0, strsec);
 			}
 			ucg_SetFontMode(&ucg, UCG_FONT_MODE_TRANSPARENT);
@@ -697,13 +797,13 @@ void drawNumberUcg(uint8_t mTscreen, char *irStr)
 	case 1:
 		TTitleStr[0] = 0;
 		drawTTitleUcg(ststr);
-	// no break
-	/* fall through */
+		// no break
+		/* fall through */
 	case 2:
 		xxx = (x / 2) - (ucg_GetStrWidth(&ucg, irStr) / 2);
 		ucg_SetColor(&ucg, 0, CBLACK);
 		ucg_DrawBox(&ucg, 0, HHeader, x, yy);
-		setfont(large);
+		setDigiSize(text);
 		ucg_SetColor(&ucg, 0, CBODY);
 		ucg_DrawString(&ucg, xxx, yy / 3, 0, irStr);
 		break;
@@ -769,7 +869,7 @@ void drawVolumeUcg(uint8_t mTscreen)
 		/* fall through */
 	case 2:
 		//        ucg_SetFont(&ucg,ucg_font_inr49_tf);
-		setfont(large);
+		setDigiSize(large);
 		uint16_t xxx;
 		xxx = (x / 2) - (ucg_GetStrWidth(&ucg, aVolume) / 2);
 		ucg_SetColor(&ucg, 0, CBLACK);
@@ -794,13 +894,13 @@ static void drawSecond(unsigned timein)
 		char strseco[13];
 		uint16_t len;
 		sprintf(strseco, ":%02d", dt->tm_sec);
-		setfont(text);
+		setDigiSize(text);
 		len = ucg_GetStrWidth(&ucg, "xxx");
 
 		ucg_SetColor(&ucg, 1, CBLACK);
 		ucg_SetFontMode(&ucg, UCG_FONT_MODE_SOLID);
 		ucg_SetColor(&ucg, 0, CBODY);
-		ucg_DrawString(&ucg, x - len - 8, yy - 18, 0, strseco);
+		ucg_DrawString(&ucg, x - len - 8, yy - 21, 0, strseco);
 		ucg_SetFontMode(&ucg, UCG_FONT_MODE_TRANSPARENT);
 		insec = timein; //to avoid redisplay
 	}
@@ -809,12 +909,12 @@ static void drawSecond(unsigned timein)
 void drawTimeUcg(uint8_t mTscreen, unsigned timein)
 {
 	char strdate[36];
-	char strtime[20];
-	sprintf(strtime, "%02d:%02d", dt->tm_hour, dt->tm_min);
+	char strtime[10];
+	sprintf(strtime, "%02d:%02d:%02d", dt->tm_hour, dt->tm_min, dt->tm_sec);
 	switch (mTscreen)
 	{
 	case 1:
-		setfont(text);
+		setDigiSize(text);
 		sprintf(strdate, "IP: %s", getIp());
 		ucg_ClearScreen(&ucg);
 		ucg_SetColor(&ucg, 0, CRED);
@@ -824,21 +924,26 @@ void drawTimeUcg(uint8_t mTscreen, unsigned timein)
 		//        ucg_DrawBox(&ucg,0,HHeader,x,yy);
 		// draw ip
 		//ucg_SetFont(&ucg,ucg_font_6x13_tf);
-		ucg_DrawString(&ucg, 4, yy - 18, 0, strdate);
+		ucg_DrawString(&ucg, 1, yy - 22, 0, strdate); //print IP address
 		/* fall through */
 	case 2:
+		setDigiSize(text);
 		if (getDdmm())
 			sprintf(strdate, "%02d-%02d-%04d", dt->tm_mday, dt->tm_mon + 1, dt->tm_year + 1900);
 		else
 			sprintf(strdate, "%02d-%02d-%04d", dt->tm_mon + 1, dt->tm_mday, dt->tm_year + 1900);
-		drawTTitleUcg(strdate);
+		
+		drawTTitleUcg(strdate); //print date
+		
 		if (strcmp(TTimeStr, strtime) != 0)
 		{
 			//ucg_SetFont(&ucg,ucg_font_inr38_mf);
-			setfont(large);
+			setDigiSize(large);
 			ucg_SetColor(&ucg, 0, CBODY);
 			ucg_SetFontMode(&ucg, UCG_FONT_MODE_SOLID);
-			ucg_DrawString(&ucg, (x / 2) - (ucg_GetStrWidth(&ucg, strtime) / 2), yy / 3, 0, strtime);
+			
+			ucg_DrawString(&ucg, (x / 2) - (ucg_GetStrWidth(&ucg, strtime) / 2), yy / 3, 0, strtime); //print time
+			
 			strcpy(TTimeStr, strtime);
 			ucg_SetFontMode(&ucg, UCG_FONT_MODE_TRANSPARENT);
 		}
@@ -846,8 +951,7 @@ void drawTimeUcg(uint8_t mTscreen, unsigned timein)
 		break;
 	default:;
 	}
-	drawSecond(timein);
-	;
+	//drawSecond(timein);
 }
 
 ////////////////////////////////////////
