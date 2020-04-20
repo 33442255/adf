@@ -32,12 +32,21 @@ COMPONENT_ADD_INCLUDEDIRS += ./lyrat_mini_v1_1
 COMPONENT_SRCDIRS += ./lyrat_mini_v1_1
 endif
 
-ifdef CONFIG_ESP_AITHINKER_V1_1_BOARD
-COMPONENT_ADD_INCLUDEDIRS += ./aithinker
-COMPONENT_SRCDIRS += ./aithinker
+if (CONFIG_ESP_AITHINKER_V1_1_BOARD)
+message(STATUS "Current board name is " CONFIG_ESP_AITHINKER_V1_1_BOARD)
+list(APPEND COMPONENT_ADD_INCLUDEDIRS ./aithinker)
+set(COMPONENT_SRCS
+./aithinker/board.c
+./aithinker/board_pins_config.c
+)
+endif()
+
+ifdef CONFIG_ESP32_KORVO_DU1906_BOARD
+COMPONENT_ADD_INCLUDEDIRS += ./esp32_korvo_du1906
+COMPONENT_SRCDIRS += ./esp32_korvo_du1906
 endif
 
-ifdef CONFIG_ESP32_CORVO_DU1906_BOARD
-COMPONENT_ADD_INCLUDEDIRS += ./esp32_corvo_du1906
-COMPONENT_SRCDIRS += ./esp32_corvo_du1906
+ifdef CONFIG_ESP32_S2_KALUGA_V1_BOARD
+COMPONENT_ADD_INCLUDEDIRS += ./esp32_s2_kaluga_v1
+COMPONENT_SRCDIRS += ./esp32_s2_kaluga_v1
 endif

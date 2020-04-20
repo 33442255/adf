@@ -87,8 +87,6 @@ typedef struct periph_ws2812 {
     periph_ws2812_process_t   process;
 } periph_ws2812_t;
 
-typedef void (*timer_callback)(TimerHandle_t tmr);
-
 static esp_err_t ws2812_init_rmt_channel(int rmt_channel)
 {
     DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_RMT_CLK_EN);

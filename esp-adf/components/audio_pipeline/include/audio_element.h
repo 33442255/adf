@@ -123,7 +123,7 @@ typedef struct {
     int64_t total_bytes;                        /*!< The total bytes for an element */
     int duration;                               /*!< The duration for an element (optional) */
     char *uri;                                  /*!< URI (optional) */
-    audio_codec_t codec_fmt;                    /*!< Music format (optional) */
+    esp_codec_type_t codec_fmt;                 /*!< Music format (optional) */
     audio_element_reserve_data_t reserve_data;  /*!< This value is reserved for user use (optional) */
 } audio_element_info_t;
 
@@ -163,6 +163,7 @@ typedef struct {
     int                 out_rb_size;      /*!< Output ringbuffer size */
     void                *data;            /*!< User context */
     const char          *tag;             /*!< Element tag */
+    bool                stack_in_ext;     /*!< Try to allocate stack in external memory */
     int                 multi_in_rb_num;  /*!< The number of multiple input ringbuffer */
     int                 multi_out_rb_num; /*!< The number of multiple output ringbuffer */
 } audio_element_cfg_t;
