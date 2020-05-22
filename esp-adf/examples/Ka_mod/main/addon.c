@@ -120,6 +120,12 @@ static bool isButton1 = true;
 static bool isJoystick0 = true;
 static bool isJoystick1 = true;
 static bool isEsplay = false;
+static bool isAdcKeyboard = false;
+static bool isAdcBatt = false;
+static esp_adc_cal_characteristics_t characteristics;
+static float adc_value = 0.0f;
+battery_state out_state;
+
 
 static int blv = 100;
 
@@ -142,6 +148,16 @@ struct tm *getDt() { return dt; }
 
 void setBlv(int val) { blv = val; }
 int getBlv() { return blv; }
+
+int getBatPercent()
+{
+	if (isAdcBatt) 
+	{
+		if (out_state.percentage > 100) return -1; // 
+		return (out_state.percentage);
+	}
+	return -1;
+}
 
 void *getEncoder(int num)
 {
@@ -246,7 +262,6 @@ void lcd_init(uint8_t Type)
 	vTaskDelay(1);
 	// init the gpio for backlight
 	LedBacklightInit();
-	//	dt=localtime(&timestamp);
 }
 
 void in_welcome(const char *ip, const char *state, int y, char *Version)
@@ -593,97 +608,157 @@ static void toggletime()
 	xQueueSend(event_lcd, &evt, 0);
 }
 
-//----------------------------
-// Adc read: keyboard buttons
-//----------------------------
+//--------------------------------------
+// Adc read: keyboard buttons bat level
+//--------------------------------------
 
 static adc1_channel_t channel = GPIO_NONE;
+static adc1_channel_t chanBat = GPIO_NONE;
 static bool inside = false;
+#define DEFAULT_VREF 1100
 
 void adcInit()
 {
-	gpio_get_adc(&channel);
-	ESP_LOGD(TAG, "ADC Channel: %i", channel);
-	if (channel != GPIO_NONE)
+	gpio_get_adc(&channel,&chanBat);
+	ESP_LOGD(TAG, "ADC Channel: %i, %i", channel,chanBat);
+	if ((channel & chanBat) != GPIO_NONE)
 	{
 		adc1_config_width(ADC_WIDTH_BIT_12);
-		adc1_config_channel_atten(channel, ADC_ATTEN_DB_0);
+		if (channel != GPIO_NONE){isAdcKeyboard =true; adc1_config_channel_atten(channel, ADC_ATTEN_DB_0);}
+		if (chanBat != GPIO_NONE)
+		{
+			isAdcBatt = true; 
+			adc1_config_channel_atten(chanBat, ADC_ATTEN_11db);
+			esp_adc_cal_value_t val_type = esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_11db, ADC_WIDTH_BIT_12, DEFAULT_VREF, &characteristics);
+			if (val_type == ESP_ADC_CAL_VAL_EFUSE_TP)
+			{
+				ESP_LOGI(TAG,"ADC: Characterized using Two Point Value");
+			}
+			else if (val_type == ESP_ADC_CAL_VAL_EFUSE_VREF)
+			{
+				ESP_LOGI(TAG,"ADC: Characterized using eFuse Vref");
+			}
+			else
+			{
+				ESP_LOGI(TAG,"ADC: Characterized using Default Vref");
+			}
+		}
 	}
 }
 
-void adcLoop()
-{
-	uint32_t voltage, voltage0, voltage1;
-	bool wasVol = false;
-	if (channel == GPIO_NONE)
-		return; // no gpio specified
+void adcBatLoop() {
+	if (isAdcBatt) 
+	{		
+		const int sampleCount = 8;
 
-	voltage0 = (adc1_get_raw(channel) + adc1_get_raw(channel) + adc1_get_raw(channel) + adc1_get_raw(channel)) / 4;
-	vTaskDelay(1);
-	voltage1 = (adc1_get_raw(channel) + adc1_get_raw(channel) + adc1_get_raw(channel) + adc1_get_raw(channel)) / 4;
-	//	printf ("Volt0: %d, Volt1: %d\n",voltage0,voltage1);
-	voltage = (voltage0 + voltage1) * 105 / (819);
-	if (voltage < 40)
-		return; // no panel
-				//	printf("Voltage: %d\n",voltage);
+		float adcSample = 0.0f;
+		for (int i = 0; i < sampleCount; ++i)
+		{
+			//adcSample += adc1_to_voltage(ADC1_CHANNEL_0, &characteristics) * 0.001f;
+			adcSample += esp_adc_cal_raw_to_voltage(adc1_get_raw(chanBat), &characteristics) * 0.001f;
+		}
+		adcSample /= sampleCount;
 
-	if (inside && (voltage0 > 3700))
-	{
-		inside = false;
-		wasVol = false;
-		return;
-	}
-	if (voltage0 > 3700)
-	{
-		wasVol = false;
-	}
-	if ((voltage0 > 3700) || (voltage1 > 3700))
-		return; // must be two valid voltage
+		if (adc_value == 0.0f)
+		{
+			adc_value = adcSample;
+		}
+		else
+		{
+			adc_value += adcSample;
+			adc_value /= 2.0f;
+		}
 
-	if (voltage < 985)
-		ESP_LOGD(TAG, "Voltage: %i", voltage);
-	//		printf("VOLTAGE: %d\n",voltage);
-	if ((voltage > 400) && (voltage < 590)) // volume +
-	{
-		setRelVolume(+5);
-		wasVol = true;
-		ESP_LOGD(TAG, "Volume+ : %i", voltage);
+		const float R1 = 100000;
+		const float R2 = 100000;
+		const float Vs = adc_value / R2 * (R1 + R2);
+
+		const float FullVoltage = 4.1f;
+		const float EmptyVoltage = 3.2f;
+
+		out_state.millivolts = (int)(Vs * 1000);
+		out_state.percentage = (int)((Vs - EmptyVoltage) / (FullVoltage - EmptyVoltage) * 100.0f);
+		ESP_LOGD(TAG,"ADC Batt: %d%%, millivolt: %d, Sample: %f, Value: %f ", out_state.percentage, out_state.millivolts ,adcSample, adc_value );
+		kprintf("ADC Batt: %d%%, millivolt: %d, Sample: %f, Value: %f \n", out_state.percentage, out_state.millivolts ,adcSample, adc_value );
+
+	//    if (out_state.percentage > 100)
+	//        out_state.percentage = 100;
+		if (out_state.percentage < 0)
+			out_state.percentage = 0;
+		
+		
 	}
-	else if ((voltage > 730) && (voltage < 830)) // volume -
-	{
-		setRelVolume(-5);
-		wasVol = true;
-		ESP_LOGD(TAG, "Volume- : %i", voltage);
-	}
-	else if ((voltage > 900) && (voltage < 985)) // station+
-	{
-		if (!wasVol)
+}
+
+void adcLoop() {
+	if (isAdcKeyboard) 
+	{		
+		uint32_t voltage,voltage0,voltage1;
+		bool wasVol = false;
+		voltage0 = (adc1_get_raw(channel)+adc1_get_raw(channel)+adc1_get_raw(channel)+adc1_get_raw(channel))/4;
+		vTaskDelay(1);
+		voltage1 = (adc1_get_raw(channel)+adc1_get_raw(channel)+adc1_get_raw(channel)+adc1_get_raw(channel))/4;
+//		printf ("Volt0: %d, Volt1: %d\n",voltage0,voltage1);
+		voltage = (voltage0+voltage1)*105/(819);
+		if (voltage <  40) return; // no panel
+//		printf("Voltage: %d\n",voltage);
+
+		if (inside&&(voltage0 > 3700)) 
 		{
-			evtStation(1);
-			ESP_LOGD(TAG, "station+: %i", voltage);
+			inside = false;
+			wasVol = false;
+			return;
 		}
-	}
-	else if ((voltage > 620) && (voltage < 710)) // station-
-	{
-		if (!wasVol)
+		if (voltage0 > 3700) 
 		{
-			evtStation(-1);
-			ESP_LOGD(TAG, "station-: %i", voltage);
+			wasVol = false;
 		}
-	}
-	if (!inside)
-	{
-		if ((voltage > 100) && (voltage < 220)) // toggle time/info  old stop
+		if ((voltage0 >3700) || (voltage1 >3700)) return; // must be two valid voltage	
+	
+		if (voltage < 985) ESP_LOGD(TAG,"Voltage: %i",voltage);	
+//			printf("VOLTAGE: %d\n",voltage);
+		if ((voltage >400) && (voltage < 590)) // volume +
 		{
-			inside = true;
-			toggletime();
-			ESP_LOGD(TAG, "toggle time: %i", voltage);
+			setRelVolume(+5);
+			wasVol = true;
+			ESP_LOGD(TAG,"Volume+ : %i",voltage);
 		}
-		else if ((voltage > 278) && (voltage < 380)) //start stop toggle   old start
+		else if ((voltage >730) && (voltage < 830)) // volume -
 		{
-			inside = true;
-			startStop();
-			ESP_LOGD(TAG, "start stop: %i", voltage);
+			setRelVolume(-5);
+			wasVol = true;
+			ESP_LOGD(TAG,"Volume- : %i",voltage);
+		}	
+		else if ((voltage >900) && (voltage < 985)) // station+
+		{
+			if (!wasVol)
+			{
+				evtStation(1);
+				ESP_LOGD(TAG,"station+: %i",voltage);
+			}
+		}	
+		else if ((voltage >620) && (voltage < 710)) // station-
+		{
+			if (!wasVol)
+			{
+				evtStation(-1);
+				ESP_LOGD(TAG,"station-: %i",voltage);
+			}
+		}	
+		if (!inside)
+		{	
+			if  ((voltage >100) && (voltage < 220)) // toggle time/info  old stop
+			{
+				inside = true;
+				toggletime();
+				ESP_LOGD(TAG,"toggle time: %i",voltage);	
+			}
+			else if ((voltage >278) && (voltage < 380)) //start stop toggle   old start
+			{
+				inside = true;
+				startStop();
+				ESP_LOGD(TAG,"start stop: %i",voltage);
+			}
 		}
 	}
 }
@@ -1435,12 +1510,10 @@ void task_addon(void *pvParams)
 	xTaskCreatePinnedToCore(task_lcd, "task_lcd", 2200, NULL, PRIO_LCD, &pxTaskLcd, CPU_LCD);
 	ESP_LOGI(TAG, "%s task: %x", "task_lcd", (unsigned int)pxTaskLcd);
 	getTaskLcd(&pxTaskLcd); // give the handle to xpt
-							//	vTaskDelay(1);
-							//	wakeLcd();
 
 	while (1)
 	{
-		adcLoop();	 // compute the adc keyboard
+		adcLoop();	 // compute the adc keyboard and battery
 		periphLoop();  // compute the encoder the buttons and joysticks
 		irLoop();	  // compute the ir
 		touchLoop();   // compute the touch screen
@@ -1457,6 +1530,8 @@ void task_addon(void *pvParams)
 
 		if (timerScreen >= 3) //  sec timeout transient screen
 		{
+			adcBatLoop() ;  // every 3 sec, check battery
+
 			//			if ((stateScreen != smain)&&(stateScreen != stime)&&(stateScreen != snull))
 			//printf("timerScreen: %d, stateScreen: %d, defaultStateScreen: %d\n",timerScreen,stateScreen,defaultStateScreen);
 			timerScreen = 0;

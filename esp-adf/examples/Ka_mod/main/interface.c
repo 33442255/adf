@@ -209,18 +209,21 @@ uint8_t startsWith(const char *pre, const char *str)
 	return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
 }
 
+//get rssi
+int8_t get_rssi(void)
+{
+	wifi_ap_record_t wifidata;
+    esp_wifi_sta_get_ap_info(&wifidata);
+    if (wifidata.primary != 0) {
+       return (wifidata.rssi);
+    }
+	return -30;
+}
+
+
 void readRssi()
 {
-	int8_t rssi = -30;
-	wifi_ap_record_t wifidata;
-	esp_wifi_sta_get_ap_info(&wifidata);
-	if (wifidata.primary != 0)
-	{
-		rssi = wifidata.rssi;
-		//       info.channel = wifidata.primary;
-	}
-	//	rssi = wifi_station_get_rssi();
-	kprintf("##RSSI: %d\n", rssi);
+	kprintf("##RSSI: %d\n",get_rssi());
 }
 
 void printInfo(char *s)

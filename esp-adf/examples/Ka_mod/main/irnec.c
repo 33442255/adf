@@ -200,10 +200,14 @@ static bool nec_rx_init()
 {
 	esp_err_t err = ESP_OK;
 	gpio_num_t ir;
+	
 	gpio_get_ir_signal(&ir);
+	
 	if (ir == GPIO_NONE)
 		return false; //no IR needed
+	
 	rmt_config_t rmt_rx;
+	
 	rmt_rx.channel = RMT_RX_CHANNEL;
 	rmt_rx.gpio_num = ir;
 	rmt_rx.clk_div = RMT_CLK_DIV;
@@ -212,7 +216,9 @@ static bool nec_rx_init()
 	rmt_rx.rx_config.filter_en = true;
 	rmt_rx.rx_config.filter_ticks_thresh = 100;
 	rmt_rx.rx_config.idle_threshold = rmt_item32_tIMEOUT_US / 10 * (RMT_TICK_10_US);
+
 	ESP_ERROR_CHECK(rmt_config(&rmt_rx));
+
 	err = rmt_driver_install(rmt_rx.channel, 1000, 0);
 	if (err != ESP_OK)
 	{
