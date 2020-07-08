@@ -35,7 +35,7 @@ static audio_board_handle_t a101_handle = 0;
 static void init_i2s(renderer_config_t *config)
 {
 	i2s_mode_t mode = I2S_MODE_MASTER | I2S_MODE_TX;
-    i2s_comm_format_t comm_fmt = I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB;
+    i2s_comm_format_t comm_fmt = I2S_COMM_FORMAT_STAND_I2S | I2S_COMM_FORMAT_STAND_MSB;
 	int use_apll = 0;
 	esp_chip_info_t out_info;
 	esp_chip_info(&out_info);
@@ -44,13 +44,13 @@ static void init_i2s(renderer_config_t *config)
     if(config->output_mode == DAC_BUILT_IN)
     {
         mode = mode | I2S_MODE_DAC_BUILT_IN;
-        comm_fmt = I2S_COMM_FORMAT_I2S_MSB;
+        comm_fmt = I2S_COMM_FORMAT_STAND_MSB;
     }
 
     if(config->output_mode == PDM)
     {
         mode = mode | I2S_MODE_PDM;
-		comm_fmt = I2S_COMM_FORMAT_PCM | I2S_COMM_FORMAT_PCM_SHORT;
+		comm_fmt = I2S_COMM_FORMAT_STAND_PCM_SHORT;
     }
 
 	if ((config->output_mode == I2S)||(config->output_mode == A1S))

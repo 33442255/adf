@@ -95,7 +95,7 @@ xQueueHandle event_queue;
 
 //xSemaphoreHandle print_mux;
 static uint16_t FlashOn = 5, FlashOff = 5;
-bool ledStatus = true;   // true: normal blink, false: led on when playing
+bool ledStatus = true;	// true: normal blink, false: led on when playing
 bool ledPolarity = true; // true: normal false: reverse
 player_t *player_config;
 static output_mode_t audio_output_mode;
@@ -985,7 +985,7 @@ void app_main()
 	}
 
 	copyDeviceSettings(); // copy in the safe partion
-
+	
 	// led mode
 	if (g_device->options & T_LED)
 		ledStatus = false;

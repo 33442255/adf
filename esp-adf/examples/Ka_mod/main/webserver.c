@@ -337,7 +337,14 @@ void setRelVolume(int8_t vol)
 static void rssi(int socket)
 {
 	char answer[20];
-	sprintf(answer,"{\"wsrssi\":\"%d\"}",get_rssi());
+	int8_t rssi = -30;
+	wifi_ap_record_t wifidata;
+	esp_wifi_sta_get_ap_info(&wifidata);
+	if (wifidata.primary != 0)
+	{
+		rssi = wifidata.rssi;
+	}
+	sprintf(answer, "{\"wsrssi\":\"%d\"}", rssi);
 	websocketwrite(socket, answer, strlen(answer));
 }
 
